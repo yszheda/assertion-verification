@@ -1,0 +1,262 @@
+module Ex
+    (*
+    use import module array.Array
+    *)
+    use import module ref.Ref
+    (*
+    use import module string.String
+    use export module string.Buffer
+    *)
+    use export module string.Char
+    use import int.Int
+    use import list.List
+    use import list.Length
+    use import list.Mem
+    use import list.Nth
+    use import list.Append
+    (*use import map.Map *)
+    (* use import relation.Relation *)
+    type tupleType = {| a1: int; a2: int |}
+    type tupleType1 = {| b1: int; b2: list char |}
+    type tupleType2 = {| c1: int; c2: real; c3: int; c4: int |}
+
+    (* CREATE ASSERTION assertion1
+     * CHECK (NOT EXISTS (SELECT *
+     *                    FROM r
+     *                    WHERE r.a1 <> r.a2))
+     *)
+    predicate assertion1 (r: list tupleType) = 
+            (not (exists x: tupleType. mem x r /\ x.a1 <> x.a2)) 
+    (* CREATE ASSERTION assertion2
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r
+     *                    WHERE r.a1 = r.a2))
+     *)
+    predicate assertion2 (r: list tupleType) = 
+            exists x: tupleType. mem x r /\ x.a1 = x.a2 
+    (* CREATE ASSERTION assertion3
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r
+     *                    WHERE r.a1 IN (1, 2, 3) ))
+     *)
+    predicate assertion3 (r: list tupleType) = 
+            exists x: tupleType. mem x r /\ mem x.a1 (Cons 1 (Cons 2 (Cons 3 Nil)))
+    (* CREATE ASSERTION assertion4
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r1
+     *                    WHERE r1.b2 = "ab" ))
+     *)
+    predicate assertion4 (r1: list tupleType1) = 
+            exists x: tupleType1. mem x r1 /\ x.b2 = Cons 97 (Cons 98 Nil)
+            (* Buffer.add_char (Char.chr 97) (Char.chr 98) *)
+    (* CREATE ASSERTION assertion5
+     * CHECK (NOT EXISTS (SELECT *
+     *                    FROM r,r1
+     *                    WHERE r.a1 <> r1.b1))
+     *)
+    predicate assertion5 (r: list tupleType) (r1: list tupleType1) = 
+            forall x: tupleType, x1: tupleType1. mem x r -> mem x1 r1 -> x.a1 = x1.b1 
+    (* CREATE ASSERTION assertion6
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r,r1
+     *                    WHERE r.a1 = r1.b1))
+     *)
+    predicate assertion6 (r: list tupleType) (r1: list tupleType1) = 
+            exists x: tupleType, x1: tupleType1. mem x r /\ mem x1 r1 /\ x.a1 = x1.b1 
+    (* CREATE ASSERTION assertion7
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r1
+     *                    WHERE r1.b1 = 1))
+     *)
+    predicate assertion7 (r1: list tupleType1) = 
+            exists x1: tupleType1. mem x1 r1 /\ x1.b1 = 1
+    (* CREATE ASSERTION assertion8
+     * CHECK (EXISTS (SELECT *
+     *                    FROM r, r1, r2
+     *                    WHERE r.a1 + r1.b1 > r2.c1 ))
+     *)
+    predicate assertion8 (r: list tupleType) (r1: list tupleType1) (r2: list tupleType2) = 
+            exists x: tupleType, x1: tupleType1, x2: tupleType2. mem x r /\ mem x1 r1 /\ mem x2 r2 /\ x.a1 + x1.b1 > x2.c1
+    
+    (* INSERT INTO r
+     * VALUES (1, 1)*)
+    (* after the operation, assertion1 holds *)
+    let insert0 (r : list tupleType ) =
+            {assertion1 r}
+            (r) ++ (Cons {| a2 = 1; a1 = 1 |} Nil)
+            {assertion1 result}
+    (* INSERT INTO r
+     * VALUES (1, 2)*)
+    (* after the operation, assertion1 doesn't hold *)
+    let insert1 (r : list tupleType ) =
+            {assertion1 r}
+            (r) ++ (Cons {| a1 = 1; a2 = 2 |} Nil)
+            {assertion1 result}
+    (* INSERT INTO r
+     * VALUES (1, 1)*)
+    (* after the operation, assertion3 holds (CVC) *)
+    let insert2 (r : ref (list tupleType) ) =
+            {assertion3 !r}
+            r := (!r) ++ (Cons {| a1 = 1; a2 = 1 |} Nil);
+            !r
+            {assertion3 result}
+
+            
+    (* INSERT INTO r
+     * VALUES (1, 1)*)
+    (* INSERT INTO r1
+     * VALUES (1, "b")*)
+    let insert3 (r : ref (list tupleType) ) (r1: ref (list tupleType1) )=
+            {assertion5 !r !r1}
+            r := (!r) ++ (Cons {| a1 = 1; a2 = 1 |} Nil);
+            r1 := (!r1) ++ (Cons {| b1 = 1; b2 = (Cons (chr 98) Nil) |} Nil)
+            {assertion5 !r !r1}
+
+
+    (* DELETE FROM r
+     * WHERE ( r.a1 = r.a2)*)
+    (* after the operation, assertion2 doesn't hold *)
+    let rec delete0 (r: list tupleType) = 
+            {  }
+            match r with
+            | Nil -> Nil
+            | Cons {| a1 = v1; a2 = v2 |} l -> if v1 = v2 then (delete0 l) else Cons
+            {| a1 = v1; a2 = v2 |} (delete0 l)
+            end
+            {assertion2 r -> assertion2 result}
+    (* DELETE FROM r
+     * WHERE ( r.a1 = 0 )*)
+    let rec delete1 (r: list tupleType) = 
+            {  }
+            match r with
+            | Nil -> Nil
+            | Cons {| a1 = v1; a2 = v2 |} l -> if v1 = 0 then (delete1 l) else Cons
+            {| a1 = v1; a2 = v2 |} (delete1 l)
+            end
+            {assertion2 r -> assertion2 result}
+    (* DELETE FROM r
+     * WHERE ( r.a1 = r.a2)*)
+    let rec delete2 (r: list tupleType) = 
+            {  }
+            match r with
+            | Nil -> Nil
+            | Cons {| a1 = v1; a2 = v2 |} l -> if v1 = v2 then (delete2 l) else Cons
+            {| a1 = v1; a2 = v2 |} (delete2 l)
+            end
+            {assertion1 r -> assertion1 result}
+
+
+    (* gg *)
+    let rec delete_r1_old (r1: list tupleType1) value =
+            {}
+            match r1 with
+            | Nil -> Nil
+            | Cons {| b1 = v11; b2 = v12 |} l -> if v11 = value then
+                    (delete_r1_old l value) 
+            else Cons {| b1 = v11; b2 = v12 |} (delete_r1_old l value)
+            end
+            { forall x1: tupleType1. mem x1 result -> x1.b1 <> value }
+ 
+    let rec delete3var (r: list tupleType) (r1: list tupleType1) =
+            {}
+            match r with
+            | Nil -> r1     
+            | Cons {| a1 = v11 |} l -> delete3var l (delete_r1_old r1 v11)
+            (* | Cons {| a1 = v11 |} l -> delete_r1 (delete3var r l) v11 *)
+            end
+            {assertion6 r r1 -> assertion6 r result }
+            
+    let delete3 (r: list tupleType) (r1: ref (list tupleType1) ) = 
+            { }
+            for i = 0 to ( length r - 1 )
+            do
+            let value =  match ( nth i r ) with 
+            | Some x -> x.a1 
+            | None -> absurd
+            end
+            in 
+            r1 := delete_r1_old !r1 value
+            done
+            {assertion6 r (old !r1) -> assertion6 r !r1 }
+
+    (* DELETE FROM r1
+     * USING r, r1, r2
+     * WHERE ( r.a1 + r1.b1 > r2.c1 ) AND ( r1.b1 * r.a2 - r2.c3 = r2.c4 ) *)
+    let rec delete_r1 (r: list tupleType) r1 (r2: list tupleType2) r_a1_value r_a2_value r2_c1_value r2_c3_value r2_c4_value =
+            { }
+            match r1 with
+            | Nil -> Nil
+            | Cons {| b1 = r1_b1_value; b2 = r1_b2_value |} l ->
+                            if r_a1_value + r1_b1_value > r2_c1_value &&
+                            r1_b1_value * r_a2_value -r2_c3_value = r2_c4_value then
+                                    ( delete_r1 r l r2 r_a1_value r_a2_value r2_c1_value r2_c3_value r2_c4_value ) 
+            else Cons {| b1 = r1_b1_value; b2 = r1_b2_value |} ( delete_r1 r l r2 r_a1_value r_a2_value r2_c1_value r2_c3_value r2_c4_value )
+            end
+            { forall x1: tupleType1. mem x1 result -> 
+                    not ( r_a1_value + x1.b1 > r2_c1_value /\ 
+                    x1.b1 * r_a2_value - r2_c3_value = r2_c4_value ) }
+ 
+    let rec iter_r r r1 (r2: list tupleType2) r2_c1_value r2_c3_value r2_c4_value =
+            { }
+            match r with
+            | Nil -> r1     
+            | Cons {| a1 = r_a1_value; a2 = r_a2_value |} l ->
+                            iter_r l ( delete_r1 r r1 r2 r_a1_value r_a2_value r2_c1_value r2_c3_value r2_c4_value ) r2 r2_c1_value r2_c3_value r2_c4_value 
+            (* | Cons {| a1 = v11 |} l -> delete_r1 (delete3var r l) v11 *)
+            end
+            { }
+            
+    let rec iter_r2 r r1 r2 =
+            { }
+            match r2 with
+            | Nil -> r1     
+            | Cons {| c1 = r2_c1_value; c2 = r2_c2_value; c3 = r2_c3_value; c4 = r2_c4_value |} l ->
+                            iter_r2 r ( iter_r r r1 r2 r2_c1_value r2_c3_value r2_c4_value ) l
+            (* | Cons {| a1 = v11 |} l -> delete_r1 (delete3var r l) v11 *)
+            end
+            { assertion8 r r1 r2 -> assertion8 r result r2 }
+            
+            
+           (*
+    let delete3 (r: list tupleType) (r1: ref (list tupleType1) ) = 
+            { }
+            for i = 0 to ( length r - 1 )
+            do
+                    let value = ( nth i r ).a1 
+            in 
+            delete_r1 !r1 value
+            done
+            {assertion6 r !r1 -> assertion6 r !r1 }
+            *)
+
+    let delete_test_r1 (r1: (list tupleType1) ) = 
+            { }
+            delete_r1_old r1 1
+            { assertion7 ( old r1 ) -> assertion7 result }
+    
+    (* UPDATE r
+     * SET r.a1=1, r.a2=2
+     * WHERE ( r.a1 = r.a2 )*)
+    (* after the operation, assertion1 doesn't hold *)
+     let rec update0 (r: list tupleType) = 
+            {assertion1 r}
+            match r with
+            | Nil -> Nil
+            | Cons {| a1 = v1; a2 = v2 |} l -> if v1 = v2 then Cons {| a1 = 1; a2 = 2 |}
+            (update0 l) else Cons {|a1 = v1; a2 = v2|} (update0 l)
+            end
+            {assertion1 result}
+    (* UPDATE r
+     * SET r.a1=1, r.a2=1
+     * WHERE ( r.a1 = r.a2 )*)
+    (* after the operation, assertion1 holds *)
+     let rec update1 (r: list tupleType) = 
+            {assertion1 r}
+            match r with
+            | Nil -> Nil
+            | Cons {| a1 = v1; a2 = v2 |} l -> if v1 = v2 then Cons {| a1 = 1; a2 = 1 |}
+            (update1 l) else Cons {|a1 = v1; a2 = v2|} (update1 l)
+            end
+            {assertion1 result}
+
+end
