@@ -1,0 +1,24 @@
+global.cmo: global.cmi
+global.cmi: global.mli
+insert.cmo: insert.cmi global.cmo
+insert.cmx: insert.cmi global.cmx
+insertLexer.cmo: insert.cmi global.cmo
+insertLexer.cmx: insert.cmx global.cmx
+delete.cmo: delete.cmi global.cmo
+delete.cmx: delete.cmi global.cmx
+deleteLexer.cmo: delete.cmi global.cmo
+deleteLexer.cmx: delete.cmx global.cmx
+update.cmo: update.cmi global.cmo
+update.cmx: update.cmi global.cmx
+updateLexer.cmo: update.cmi global.cmo
+updateLexer.cmx: update.cmx global.cmx
+assertion.cmo: assertion.cmi global.cmo
+assertion.cmx: assertion.cmi global.cmx
+assertionLexer.cmo: assertion.cmi global.cmo
+assertionLexer.cmx: assertion.cmx global.cmx
+tableDef.cmo: tableDef.cmi global.cmo
+tableDef.cmx: tableDef.cmi global.cmx
+tableDefLexer.cmo: tableDef.cmi global.cmo
+tableDefLexer.cmx: tableDef.cmx global.cmx
+main.cmo: assertionLexer.cmo tableDefLexer.cmo updateLexer.cmo deleteLexer.cmo insertLexer.cmo
+main.cmx: assertionLexer.cmx tableDefLexer.cmx updateLexer.cmx deleteLexer.cmx insertLexer.cmx
