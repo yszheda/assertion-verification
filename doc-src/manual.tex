@@ -1,0 +1,181 @@
+%        File: manual.tex
+%     Created: 二  2月 07 12:00 下午 2012 C
+% Last Change: 二  2月 07 12:00 下午 2012 C
+%
+\documentclass[a4paper]{article}
+\title{Manual}
+\author{Shuai Yuan}
+\date{}
+\begin{document}
+\maketitle{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% define new command
+\newcommand{\bdm}
+{
+\begin{displaymath}
+\begin{array}{rcl}
+}
+\newcommand{\edm}
+{
+\end{array}
+\end{displaymath}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The program ``translation'' parse SQL phrases into Why3ML program. It mainly contains the following parts:
+\begin{itemize}
+  \item[-] header of Why3ML program, mainly commands of importing libraries.
+  \item[-] parser for the SQL table definition, this part translate the ``CREATE TABLE'' phrase into the definition of the type of the corresponding table's tuple.
+  \item[-] parser for the SQL assertion, this part translate the ``CREATE ASSERTION'' phrase into ``predicate'' in the Why3ML program.
+  \item[-] parser for the SQL INSERT command, this part translate the SQL INSERT command into a method in the Why3ML program.
+  \item[-] parser for the SQL DELETE command, this part translate the SQL INSERT command into a method in the Why3ML program.
+  \item[-] parser for the SQL UPDATE command, this part translate the SQL INSERT command into a method in the Why3ML program.
+\end{itemize}
+
+\section{Parser for the SQL Table Definition}
+The source language of SQL table definition is expressed in the following grammar:
+\bdm
+\textrm{$<$table definition$>$} &::=& \textrm{CREATE TABLE \textit{$<$table name$>$}} \\ 
+&& \left( \textrm{$<$table element list$>$} \right) \\
+\textrm{$<$table element list$>$} &::=& \textrm{$<$table element$>$} \\
+&|& \textrm{$<$table element list$>$} , \textrm{$<$table element$>$} \\
+\textrm{$<$table element$>$} &::=& \textrm{\textit{$<$column name$>$} $<$data type$>$} \\
+\textrm{$<$data type$>$} &::=& \textrm{INTEGER} \\
+&& \textrm{SMALLINT} \\
+&& \textrm{FLOAT} \\
+&& \textrm{NUMERIC} \\
+&& \textrm{BOOLEAN} 
+% \\ && \textrm{CHAR}
+\edm
+
+\section{Parser for the SQL Assertion}
+The grammar of SQL assertion is:
+\bdm
+\textrm{CREATE ASSERTION \textit{$<$assertion name$>$}}	\\
+\textrm{CHECK $<$exists predicate$>$}
+% \textrm{CHECK $<$search condition$>$}
+\edm
+\bdm
+\textrm{$<$exists predicate$>$} &::=& \textrm{[ NOT ] EXISTS ( $<$query expression$>$ )} \\
+
+\textrm{$<$query expression$>$} &::=& \textrm{SELECT *}	\\
+% && \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$ }	\\
+&& \textrm{FROM $<$table list$>$}	\\
+&& \textrm{WHERE $<$search condition$>$} \\
+
+\textrm{$<$table list$>$} &::=& \textrm{\textit{$<$table name$>$}} ~ \textrm{\textit{$<$tuple name$>$}} \\
+&& \textrm{$<$table list$>$} , \textrm{\textit{$<$table name$>$}} ~ \textrm{\textit{$<$tuple name$>$}} \\
+
+\textrm{$<$search condition$>$} &::=& \textrm{$<$boolean term$>$} \\
+&|& \textrm{$<$search condition$>$ OR $<$boolean term$>$} \\
+
+\textrm{$<$boolean term$>$} &::=& \textrm{$<$boolean factor$>$} \\
+&|& \textrm{$<$boolean term$>$ AND $<$boolean factor$>$} \\
+
+\textrm{$<$boolean factor$>$} &::=& \textrm{$<$predicate$>$} \\
+&|& \textrm{[ NOT ] ( $<$search condition$>$ )} \\
+
+\textrm{$<$predicate$>$} &::=& \textrm{$<$exists predicate$>$} \\
+&|& \textrm{$<$comparison predicate$>$} \\
+&|& \textrm{$<$between predicate$>$} \\
+&|& \textrm{$<$in predicate$>$} \\
+&|& \textrm{$<$null predicate$>$} \\
+
+% \textrm{$<$exists predicate$>$} &::=& \textrm{[ NOT ] EXISTS ( $<$query expression$>$ )} \\
+% 
+% \textrm{$<$query expression$>$} &::=& \textrm{SELECT *}	\\
+% % && \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$ }	\\
+% && \textrm{FROM $<$table list$>$}	\\
+% && \textrm{WHERE $<$search condition$>$} \\
+% 
+% \textrm{$<$table list$>$} &::=& \textrm{$<$table name$>$} ~ \textrm{$<$tuple name$>$} \\
+% && \textrm{$<$table list$>$} , \textrm{$<$table name$>$} ~ \textrm{$<$tuple name$>$} \\
+% 
+\textrm{$<$comparison predicate$>$} &::=& \textrm{$<$expression$_{1}>$} ~ \textrm{$<$comp op$>$} ~ \textrm{$<$expression$_{2}>$} \\
+\textrm{$<$comp op$>$} &::=&  =	
+~|~	<>
+~|~	<
+~|~	\leq
+~|~	>
+~|~	\geq \\
+
+\textrm{$<$expression$>$} &::=& \textrm{$<$term$>$} \\
+&|& \textrm{$<$expression$>$} ~ \left\{ + ~|~ - \right\} ~ \textrm{$<$term$>$} \\
+
+\textrm{$<$term$>$} &::=& \textrm{$<$factor$>$} \\
+&|&	 \textrm{$<$term$>$} ~ \left\{ * ~|~ / \right\} ~ \textrm{$<$factor$>$} \\
+  
+\textrm{$<$factor$>$} &::=& \left( \textrm{$<$expression$>$} \right) \\
+&|& \left[ + ~|~ - \right] \textrm{\textit{$<$constant$>$}} \\
+&|& \left[ + ~|~ - \right] \textrm{$<$column$>$} \\
+
+\textrm{$<$column$>$} &::=& \textrm{\textit{$<$tuple name$>$}.\textit{$<$attribute name$>$}} \\
+
+\textrm{$<$between predicate$>$} &::=& \mbox{$<$expression$>$ [ NOT ]} \\
+&& \mbox{BETWEEN \textit{$<$constant$_{1}>$} AND \textit{$<$constant$_{2}>$}} \\
+
+\textrm{$<$in predicate$>$}	&::=& \textrm{$<$expression$>$} \textrm{[ NOT ] IN ( $<$in value list$>$ )} \\
+\textrm{$<$in value list$>$} &::=& \textrm{\textit{$<$constant$>$}} \\
+&|& \textrm{$<$in value list$>$} , \textrm{\textit{$<$constant$>$}} \\
+
+\textrm{$<$null predicate$>$} &::=& \textrm{$<$column$>$} \textrm{ IS [ NOT ] NULL} \\
+
+\edm
+
+\section{Parser for the SQL INSERT statement}
+The grammar of SQL insert statement is:
+\bdm
+\textrm{$<$insert statement$>$} &::=& \textrm{INSERT INTO \textit{$<$table name$>$} VALUES ( $<$column value list$>$ )} \\
+&|& \textrm{INSERT INTO \textit{$<$table name$>$} ( $<$column name list$>$ )} \\
+&& \textrm{VALUES ( $<$column value list$>$ )} \\
+\textrm{$<$column name list$>$} &::=& \textrm{\textit{$<$column name$>$}} \\
+&|& \textrm{$<$column name list$>$} , \textrm{\textit{$<$column name$>$}} \\
+\textrm{$<$column value list$>$} &::=& \textrm{$<$column value$>$} \\
+&|& \textrm{$<$column value list$>$} , \textrm{\textit{$<$column value$>$}} \\
+
+\edm
+
+\section{Parser for the SQL DELETE statement}
+The grammar of SQL delete statement is:
+\bdm
+\textrm{$<$delete statement$>$} &::=& \textrm{DELETE FROM \textit{$<$target table name$>$}} \\
+&& \textrm{[ USING $<$table reference list$>$ ]} \\
+&& \textrm{[ WHERE $<$search condition$>$ ]} \\
+\textrm{$<$table reference list$>$} &::=& \textrm{\textit{$<$table name$>$}} \\
+&|& \textrm{$<$table reference list$>$} , \textrm{\textit{$<$table name$>$}} \\
+
+\textrm{$<$search condition$>$} &::=& \textrm{$<$boolean term$>$} \\
+&|& \textrm{$<$search condition$>$ OR $<$boolean term$>$} \\
+
+\textrm{$<$boolean term$>$} &::=& \textrm{$<$boolean factor$>$} \\
+&|& \textrm{$<$boolean term$>$ AND $<$boolean factor$>$} \\
+
+\textrm{$<$boolean factor$>$} &::=& \textrm{$<$predicate$>$} \\
+&|& \textrm{[ NOT ] ( $<$search condition$>$ )} \\
+
+\textrm{$<$predicate$>$} &::=& \textrm{$<$comparison predicate$>$} \\
+&|& \textrm{$<$between predicate$>$} \\
+&|& \textrm{$<$in predicate$>$} \\
+&|& \textrm{$<$null predicate$>$} \\
+\edm
+The left parts are the same as those in the SQL assertion, so they are omitted in this manual. 
+
+\section{Parser for the SQL UPDATE statement}
+The grammar of SQL update statement is:
+\bdm
+\textrm{$<$update statement$>$} &::=& \textrm{UPDATE \textit{$<$target table name$>$}} \\
+&& \textrm{SET $<$set clause list$>$} \\
+&& \textrm{[ FROM $<$table reference list$>$ ]} \\
+&& \textrm{[ WHERE $<$search condition$>$ ]} \\
+\textrm{$<$set clause list$>$} &::=& \textrm{$<$set clause$>$} \\
+&& \textrm{$<$set clause list$>$} , \textrm{$<$set clause$>$} \\
+\textrm{$<$set clause$>$} &::=& \textrm{$<$set column$>$} = \textrm{\textit{$<$constant$>$}} \\
+\textrm{$<$set column$>$} &::=& \textrm{\textit{$<$table name$>$}.\textit{$<$attribute name$>$}} \\
+\edm
+The left parts are the same as those in the SQL delete statement grammar, so they are omitted in this manual. 
+
+
+\end{document}
+
+
