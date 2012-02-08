@@ -1,7 +1,7 @@
 translation is a program that parse SQL phrases into Why3ML program.
 USAGE:
 translation
-This command will read the definition 
+The program will read the SQL table definition from the standard input until it meets "EOF", then SQL assertion and later the SQL INSERT/DELETE/UPDATE statement will be read and parsed.   
 translation file1
 
 translation file1 file2 
