@@ -1,0 +1,5 @@
+
+UPDATE r1
+SET r1.b1=1
+FROM r, r1
+WHERE ( r.a1 = r1.b1 );
