@@ -1,0 +1,11 @@
+translation is a program that parse SQL phrases into Why3ML program.
+USAGE:
+translation
+This command will read the definition 
+translation file1
+
+translation file1 file2 
+
+translation file1 file2 file3 
+
+translation file1 file2 file3 file4
