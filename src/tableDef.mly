@@ -16,12 +16,10 @@ let attribute_list = ref []
 %token <string> STR
 %token LPAREN RPAREN
 %token COMMA
-%token INTEGER
-%token SMALLINT
-%token FLOAT
-%token NUMERIC
+%token INT INTEGER BIGINT SMALLINT
+%token REAL FLOAT DOUBLE NUMERIC DEC DECIMAL 
 %token BOOLEAN
-%token CHAR
+%token CHAR CHARATER VARCHAR 
 
 %start input
 %type <unit> input
@@ -75,11 +73,94 @@ column_name: STR { $1 }
 ;
 /* translation from SQL type to Why3ML type */
 data_type: 
-    | INTEGER   { "int" }
-    | SMALLINT  { "int" }
-    | FLOAT     { "real" }
-    | NUMERIC   { "real" }
-    | BOOLEAN   { "bool" }
-    | CHAR      { "char" }
+    | INT       
+    {
+            lib_set := StringSet.add "int.Int" !lib_set; 
+            "int" 
+    }
+    | INTEGER   
+    {
+            lib_set := StringSet.add "int.Int" !lib_set; 
+            "int" 
+    }
+    | BIGINT    
+    {
+            lib_set := StringSet.add "int.Int" !lib_set; 
+            "int" 
+    }
+    | SMALLINT  
+    {
+            lib_set := StringSet.add "int.Int" !lib_set; 
+            "int" 
+    }
+    | REAL      
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | FLOAT     
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | DOUBLE    
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | NUMERIC   
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | DEC       
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | DECIMAL   
+    {
+            (*
+            lib_set := StringSet.add "real.Real" !lib_set; 
+            *)
+            "real" 
+    }
+    | BOOLEAN   
+    {
+            lib_set := StringSet.add "bool.Bool" !lib_set; 
+            "bool" 
+    }
+    | CHAR      
+    {
+            lib_set := StringSet.add "module string.Char" !lib_set; 
+            "char" 
+    }
+    | CHARATER  
+    {
+            lib_set := StringSet.add "module string.Char" !lib_set; 
+            "char" 
+    }
+    | VARCHAR   
+    {
+            lib_set := StringSet.add "module string.Char" !lib_set; 
+            lib_set := StringSet.add "list.List" !lib_set;
+            "list char" 
+    }
+    | CHAR LPAREN STR RPAREN  
+    {
+            lib_set := StringSet.add "module string.Char" !lib_set; 
+            lib_set := StringSet.add "list.List" !lib_set;
+            "list char" 
+    }
 
 %%

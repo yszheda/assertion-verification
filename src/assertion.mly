@@ -2,6 +2,8 @@
 
 %{
 open Printf
+open Char
+open String
 open List
 open Global
 let binders = ref ""
@@ -27,6 +29,9 @@ let gen_arguments () =
 %token ENDOFSQL 
 %token CREATE ASSERTION CHECK
 %token <string> STR
+%token <string> NUM
+%token <string> CHAR
+%token SINGLEQUOTE DOUBLEQUOTE
 %token LPAREN RPAREN
 %token OR AND
 %token NOT
@@ -44,6 +49,7 @@ let gen_arguments () =
 %start input
 //%type <string> input
 %type <unit> input
+%type <string list> table_list
 
 /* Grammar follows */
 %%
@@ -112,32 +118,65 @@ predicate:
 ;
 exists_predicate: 
     | EXISTS LPAREN SELECT STAR FROM table_list WHERE search_condition RPAREN 
-    { "exists " ^ !binders ^ $6 ^ " /\\ " ^ $8 }
+    {
+            (*
+        let old_binders = ref "" in
+        if !binders <> "" then
+        begin
+                old_binders := !binders;
+                binders := ""
+        end;
+        let exists_exp = "exists " ^ !binders ^ $6 ^ " /\\ " ^ $8 in
+        binders := !old_binders;
+        exists_exp
+        *)
+        "exists " ^ (nth $6 0) ^ (nth $6 1) ^ " /\\ " ^ $8
+    }
     | NOT EXISTS LPAREN SELECT STAR FROM table_list WHERE search_condition RPAREN 
-    { "not ( exists " ^ !binders ^ $7 ^ " /\\ " ^ $9 ^ " ) " }
+    {
+            (*
+        let old_binders = ref "" in
+        if !binders <> "" then
+        begin
+                old_binders := !binders;
+                binders := ""
+        end;
+        let exists_exp = "not ( exists " ^ !binders ^ $7 ^ " /\\ " ^ $9 ^ " ) " in
+        binders := !old_binders;
+        exists_exp
+        *)
+        "not ( exists " ^ (nth $7 0) ^ (nth $7 1) ^ " /\\ " ^ $9 ^ " ) "
+    }
 ;
 table_list: 
     /*
     | table_name tuple_name COMMA table_list 
     {
+            (*
             binders := $2 ^ ": tupleType_" ^ $1 ^ ", " ^ !binders;
-            (* arguments := "( " ^ $1 ^ ": list tupleType_" ^ $1 ^" )" ^ !arguments; *)
-            (* Printf.printf "binders: %s\n" !binders; *)
             " mem " ^ $2 ^ " " ^ $1 ^ " /\\ " ^ $4
+            *)
+            [ $2 ^ ": tupleType_" ^ $1 ^ ", "; " mem " ^ $2 ^ " " ^ $1 ^ " /\\ " ^ $4 ]
     }
     */
     | table_list COMMA table_name tuple_name 
     {
+            (*
             binders := $4 ^ ": tupleType_" ^ $3 ^ ", " ^ !binders;
             " mem " ^ $4 ^ " " ^ $3 ^ " /\\ " ^ $1
+            *)
+            [ $4 ^ ": tupleType_" ^ $3 ^ ", " ^ (nth $1 0); " mem " ^ $4 ^ " " ^ $3 ^ " /\\ "
+            ^ (nth $1 1) ]
     }
     | table_name tuple_name 
     {
+            (*
             binders := $2 ^ ": tupleType_" ^ $1 ^ "." ^ !binders;
-            (* arguments := "( " ^ $1 ^ ": list tupleType_" ^ $1 ^" )" ^ !arguments; *)
-            (* Printf.printf "binders: %s\n" !binders; *)
             " mem " ^ $2 ^ " " ^ $1
+            *)
+            [ $2 ^ ": tupleType_" ^ $1 ^ "."; " mem " ^ $2 ^ " " ^ $1 ]
     }
+    /* | { binders := ""; "" } */
 ;
 table_name: STR 
     {
@@ -169,12 +208,38 @@ term:
 factor: 
     | LPAREN expression RPAREN { " ( " ^ $2 ^ " ) " }
     | constant  { $1 }
+    | tuple { $1 }
     | column    { $1 }
 ;
 constant: 
-    | STR   { $1 }
-    | PLUS STR  { $2 }
-    | MINUS STR { "-" ^ $2 }
+  /*  | SINGLEQUOTE CHAR SINGLEQUOTE { $2 }  */
+    | CHAR { $1 }
+    | DOUBLEQUOTE STR DOUBLEQUOTE
+    {
+        let str_exp = ref "" in
+        let tmp_exp = ref "" in
+        let get_code chr = string_of_int (code chr) in
+        let upper = (String.length $2)-1 in
+        for i = 0 to upper
+        do
+                tmp_exp := !str_exp;
+                if i = 0 then
+                        str_exp := "(Cons " ^ (get_code
+                        $2.[upper-i]) ^ " Nil)"
+                else 
+                        str_exp := "(Cons " ^ (get_code
+                        $2.[upper-i]) ^ " " ^ !tmp_exp ^ " )" ;
+        done;
+        !str_exp
+    }
+    | NUM   { $1 }
+    | PLUS NUM  { $2 }
+    | MINUS NUM { "-" ^ $2 }
+;
+tuple: 
+    | tuple_name { $1 }
+    | PLUS tuple_name { $2 }
+    | MINUS tuple_name { "-" ^ $2 }
 ;
 column: 
     | tuple_name DOT attribute_name { $1 ^ "." ^ $3 }
@@ -185,10 +250,12 @@ attribute_name: STR { $1 }
 ;
 between_predicate: 
     | expression BETWEEN constant AND constant 
+    /* | expression BETWEEN expression AND expression */ 
     { 
             " ( " ^ $1 ^ " >= " ^ $3 ^ " ) /\\ ( " ^ $1 ^ " <= " ^ $5 ^ " ) " 
     }
     | expression NOT BETWEEN constant AND constant 
+    /* | expression NOT BETWEEN expression AND expression */ 
     { 
             " ( " ^ $1 ^ " < " ^ $4 ^ " ) \/ ( " ^ $1 ^  " > " ^ $6 ^ " ) " 
     }

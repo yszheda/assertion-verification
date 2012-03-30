@@ -1,8 +1,15 @@
-
+(* file: updateLexer.mll *)
+(* Lexical analyzer for SQL UPDATE statement.
+ * It skips all blanks and tabs, and unknown characters
+ * and raises End_of_file on EOF. *)
 {
     open Update
+    open Char
+    open String
 }
-let chr = ['a'-'z' 'A'-'Z' '0'-'9']
+let digit = ['0'-'9']
+let chr = ['a'-'z' 'A'-'Z']
+let chr_num = ['a'-'z' 'A'-'Z' '0'-'9']
 rule token = parse
     | ';'   { ENDOFSQL }
     | [' ' '\t' '\n']   { token lexbuf }
@@ -33,7 +40,12 @@ rule token = parse
     | "."   { DOT }
     | "IS"  { IS }
     | "NULL"{ NULL }
-    | chr+ as str
-(*    | chr+ "." chr*  as str *)
-    { STR (str) }
+    | "'"   { SINGLEQUOTE } 
+    | "\""  { DOUBLEQUOTE }
+    | "'" (chr as c) "'" 
+        { CHAR (string_of_int (code c)) } 
+    | digit+ as num
+        { NUM (num) }
+    | chr chr_num* as str 
+        { STR (str) } 
     | eof   { raise End_of_file }

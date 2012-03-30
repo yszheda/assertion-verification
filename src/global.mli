@@ -36,5 +36,7 @@ module StringSet :
 val assertion_list: (string * StringSet.t) list ref
 val op_argument_set : StringSet.t ref
 type attribute_def = { attribute_name: string; attribute_type: string }
+type item = { item_value: string; item_type: string }
 val tupleType_list: (string, attribute_def list) Hashtbl.t 
+val lib_set: StringSet.t ref
 

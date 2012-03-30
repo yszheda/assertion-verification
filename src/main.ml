@@ -2,6 +2,7 @@
 open Global
 open Printf
 open List
+(* open Unix *)
 (* exception End_of_def *)
 let output_string = ref ""
 
@@ -90,9 +91,17 @@ let handle_update () =
       Update.input UpdateLexer.token lexbuf;
     done;
   with 
-    | End_of_file ->
-    output_string := !tupleType_exp ^ !assertion_exp ^ !operation_exp;
-    | Parsing.Parse_error -> ()
+  | End_of_file -> output_string := !tupleType_exp ^ !assertion_exp ^ !operation_exp;
+  | Parsing.Parse_error -> ()
+
+let gen_import_stmt () =
+  let import_stmt = ref "" in
+  let lib_list = StringSet.elements !lib_set in
+    for i = 0 to (List.length lib_list)-1
+    do
+      import_stmt := !import_stmt ^ "use import " ^ (nth lib_list i) ^ "\n"
+    done;
+    !import_stmt
 
 (* let _ = Printexc.print main () *)
  let _ = 
@@ -113,18 +122,22 @@ let handle_update () =
    handle_insert (); 
    handle_delete (); 
    handle_update (); 
-   printf "%s\n" !output_string;
+   (* printf "%s\n" !output_string; *)
+   (*
    let header = 
      "module Test\n \
       use import int.Int\n \
       use import list.List\n \
       use import list.Mem\n \
       use import list.Append\n"
+     *)
+   let header = "module Test\n" ^ gen_import_stmt ()
    in
      output_string := header ^ !output_string;
-     output_string := !output_string ^ "\n end";
+     output_string := !output_string ^ "\nend";
    let file = 
       if Array.length Sys.argv > 4
       then open_out Sys.argv.(4)
       else open_out "test.mlw" in
    fprintf file "%s\n" !output_string
+   (* execv "why3ide" [|"why3ide";"test.mlw"|] *)

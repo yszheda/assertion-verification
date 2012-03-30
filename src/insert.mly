@@ -2,6 +2,8 @@
 
 %{
 open Printf
+open Char
+open String
 open List
 open Global
 let value_list = ref []
@@ -98,7 +100,11 @@ let new_column vlist nlist =
 %token ENDOFSQL 
 %token INSERT INTO
 %token <string> STR
+%token <string> NUM
+%token <string> CHAR
+%token SINGLEQUOTE DOUBLEQUOTE
 %token LPAREN RPAREN
+%token PLUS MINUS
 %token COMMA
 %token VALUES
 
@@ -180,6 +186,27 @@ column_value_list:
             value_list := append !value_list [$3]; 
     }
 ;
-column_value: STR { $1 }
+column_value: 
+    | CHAR { "(chr " ^ $1 ^ ")" }
+    | DOUBLEQUOTE STR DOUBLEQUOTE
+    {
+        let str_exp = ref "" in
+        let tmp_exp = ref "" in
+        let get_code chr = string_of_int (code chr) in
+        let upper = (String.length $2)-1 in
+        for i = 0 to upper
+        do
+                tmp_exp := !str_exp;
+                if i = 0 then
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") Nil)"
+                else 
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") " ^ !tmp_exp ^ " )" ;
+        done;
+        !str_exp
+    }
+    | NUM   { $1 }
+    | PLUS NUM  { $2 }
+    | MINUS NUM { "-" ^ $2 }
+    
 
 %%

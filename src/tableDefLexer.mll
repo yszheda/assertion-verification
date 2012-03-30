@@ -6,7 +6,7 @@
     open TableDef
     (* exception End_of_def *)
 }
-let chr = ['a'-'z' 'A'-'Z' '0'-'9']
+let chr_num = ['a'-'z' 'A'-'Z' '0'-'9']
 rule token = parse
     | ';'   { ENDOFSQL }
     | [' ' '\t' '\n']   { token lexbuf }
@@ -15,13 +15,21 @@ rule token = parse
     | '('   { LPAREN }
     | ')'   { RPAREN }
     | ","   { COMMA }
+    | "INT"       { INT }
     | "INTEGER"   { INTEGER }
+    | "BIGINT"    { BIGINT }
     | "SMALLINT"  { SMALLINT }
+    | "REAL"      { REAL }
     | "FLOAT"     { FLOAT }
+    | "DOUBLE"    { DOUBLE }
     | "NUMERIC"   { NUMERIC }
+    | "DEC"       { DEC }
+    | "DECIMAL"   { DECIMAL }
     | "BOOLEAN"   { BOOLEAN }
     | "CHAR"      { CHAR }
-    | chr+ as str { STR (str) }
+    | "CHARATER"  { CHARATER }
+    | "VARCHAR"   { VARCHAR }
+    | chr_num+ as str { STR (str) }
     | _     { token lexbuf }
     | eof   
     { 

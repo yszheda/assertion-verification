@@ -5,6 +5,8 @@
 open Printf
 open List
 open Global
+open Char
+open String
 let binders = ref ""
 let target_table = ref ""
 (* let value_list = ref [""] *)
@@ -60,7 +62,7 @@ let get_attribute_type table attribute_name =
 let gen_df_col_name_list table =
         col_name_list := [];
         let attribute_list = Hashtbl.find tupleType_list table in
-        for i = 0 to (length attribute_list)-1
+        for i = 0 to (List.length attribute_list)-1
         do
                 col_name_list := append !col_name_list [ (nth attribute_list i).attribute_name ]
         done
@@ -72,7 +74,7 @@ let gen_df_col_name_list table =
 let gen_single_args () =
         arguments := "";
         let argument_list = StringSet.elements !op_argument_set in
-        for i = 0 to (length argument_list)-1
+        for i = 0 to (List.length argument_list)-1
         do
                 arguments := " ( " ^ (nth argument_list i) ^ ": list tupleType_"
                 ^ (nth argument_list i) ^ " ) " ^ !arguments;
@@ -101,30 +103,30 @@ let rec gen_column_exp nlist table =
  * *)
 let gen_single_postcondition table = 
         let postcondition = ref "( " in
-        for i = 0 to (length !assertion_list)-1
+        for i = 0 to (List.length !assertion_list)-1
         do
                 postcondition := !postcondition ^ fst ( nth !assertion_list i );
                 let argument_list = StringSet.elements ( snd ( nth !assertion_list i ) ) in
-                for j = 0 to (length argument_list)-1
+                for j = 0 to (List.length argument_list)-1
                 do
                         postcondition := !postcondition ^ " " ^ ( nth argument_list j );
                 done;
-                if i < (length !assertion_list)-1 then
+                if i < (List.length !assertion_list)-1 then
                         postcondition := !postcondition ^ " /\\ "
         done;
         postcondition := !postcondition ^ " ) -> ( ";
-        for i = 0 to (length !assertion_list)-1
+        for i = 0 to (List.length !assertion_list)-1
         do
                 postcondition := !postcondition ^ fst ( nth !assertion_list i );
                 let argument_list = StringSet.elements ( snd ( nth !assertion_list i ) ) in
-                for j = 0 to (length argument_list)-1
+                for j = 0 to (List.length argument_list)-1
                 do
                         if ( nth argument_list j ) = table then
                                 postcondition := !postcondition ^ " result"
                         else
                                 postcondition := !postcondition ^ " " ^ ( nth argument_list j );
                 done;
-                if i < (length !assertion_list)-1 then
+                if i < (List.length !assertion_list)-1 then
                         postcondition := !postcondition ^ " /\\ "
         done;
         postcondition := !postcondition ^ " ) ";
@@ -134,7 +136,7 @@ let gen_single_postcondition table =
 let gen_rec_arguments target_table =
         rec_arguments := "";
         let argument_list = StringSet.elements !op_argument_set in
-        for i = 0 to (length argument_list)-1
+        for i = 0 to (List.length argument_list)-1
         do
                 if (nth argument_list i) = target_table then
                         rec_arguments := " l" ^ !rec_arguments
@@ -156,7 +158,7 @@ let gen_rec_arguments target_table =
  *)
 let get_predicate_arg_list () = 
         let cor_column_list = StringSet.elements !cor_column_set in
-        for i = 0 to (length cor_column_list)-1
+        for i = 0 to (List.length cor_column_list)-1
         do
                 let split_result = Str.split (Str.regexp "_") (nth cor_column_list i) in
                 let table = (nth split_result 0) in
@@ -176,7 +178,7 @@ let get_attribute_type column =
         let table = (nth split_result 0) in
         let attribute = (nth split_result 1) in
         let attribute_list = Hashtbl.find tupleType_list table in
-        for i = 0 to (length attribute_list)-1
+        for i = 0 to (List.length attribute_list)-1
         do
                 if (nth attribute_list i).attribute_name = attribute then
                         attribute_type := (nth attribute_list i).attribute_type
@@ -191,7 +193,7 @@ let gen_predicate () =
         get_predicate_arg_list ();
         sc_predicate := "predicate sc_predicate";
         let cor_column_list = StringSet.elements !cor_column_set in
-        for i = 0 to (length cor_column_list)-1
+        for i = 0 to (List.length cor_column_list)-1
         do
                 let cor_column = (nth cor_column_list i) in
                 sc_predicate := !sc_predicate ^ " ( " ^ (nth cor_column_list i)
@@ -209,11 +211,11 @@ let gen_predicate () =
  *)
 let gen_iter_binders cor_table_list = 
         let binders = ref "exists " in
-        for i = 0 to (length cor_table_list)-1
+        for i = 0 to (List.length cor_table_list)-1
         do
                 let iter_table = (nth cor_table_list i) in
                 binders := !binders ^ "x_" ^ iter_table ^ ": tupleType_" ^ iter_table;
-                if i < (length cor_table_list)-1 then
+                if i < (List.length cor_table_list)-1 then
                         binders := !binders ^ ", "
                 else
                         binders := !binders ^ ". " 
@@ -228,7 +230,7 @@ let gen_iter_binders cor_table_list =
  *)
 let gen_binder_mem cor_table_list = 
         let binder_mem = ref "" in
-        for i = 0 to (length cor_table_list)-1
+        for i = 0 to (List.length cor_table_list)-1
         do
                 let iter_table = (nth cor_table_list i) in
                 binder_mem := !binder_mem ^ "mem x_" 
@@ -244,7 +246,7 @@ let gen_binder_mem cor_table_list =
  *)
 let gen_multi_predicate cor_table_list =
         let iter_predicate = ref "( sc_predicate" in
-        for i = 0 to (length !predicate_arg_list)-1
+        for i = 0 to (List.length !predicate_arg_list)-1
         do
                 let predicate_arg = (nth !predicate_arg_list i) in
                 if (mem predicate_arg.table cor_table_list) then
@@ -258,23 +260,23 @@ let gen_multi_predicate cor_table_list =
         !iter_predicate
 
 (* 
- * gen_cor_assertions ():
+ * gen_pre_cor_assertions ():
  * Generate the corresponding expressions of assertions according to the tables
  * which have been already iterated ( iter_table_list ). An assertion will be
  * chosen only when all its corresponding tables are from iter_table_list.
  *)
-let gen_cor_assertions () =
+let gen_pre_cor_assertions () =
         let cor_assertions = ref "" in
         let is_cor = ref true in
         let assertion_stmt = ref "" in
-        for i = 0 to (length !assertion_list)-1
+        for i = 0 to (List.length !assertion_list)-1
         do
                 is_cor := true;
                 assertion_stmt := "";
                 let assertion = (nth !assertion_list i) in
                 let argument_list = StringSet.elements (snd assertion) in
                 assertion_stmt := fst assertion;
-                for j = 0 to (length argument_list)-1
+                for j = 0 to (List.length argument_list)-1
                 do
                         assertion_stmt := !assertion_stmt ^ " " ^ ( nth argument_list j );
                         if not (mem (nth argument_list j) !iter_table_list)
@@ -287,6 +289,46 @@ let gen_cor_assertions () =
                         cor_assertions := !cor_assertions ^ !assertion_stmt;
                 end
         done;
+        if !cor_assertions = "" then
+                cor_assertions := "true";
+        !cor_assertions
+
+(* 
+ * gen_post_cor_assertions table: 
+ * Generate the corresponding expressions of assertions according to the tables
+ * which have been already iterated ( iter_table_list ). An assertion will be
+ * chosen only when all its corresponding tables are from iter_table_list.
+ *)
+let gen_post_cor_assertions table =
+        let cor_assertions = ref "" in
+        let is_cor = ref true in
+        let assertion_stmt = ref "" in
+        for i = 0 to (List.length !assertion_list)-1
+        do
+                is_cor := true;
+                assertion_stmt := "";
+                let assertion = (nth !assertion_list i) in
+                let argument_list = StringSet.elements (snd assertion) in
+                assertion_stmt := fst assertion;
+                for j = 0 to (List.length argument_list)-1
+                do
+                        if ( nth argument_list j ) = table then
+                                assertion_stmt := !assertion_stmt ^ " result"
+                        else
+                                assertion_stmt := !assertion_stmt ^ " " ^ ( nth argument_list j );
+
+                        if not (mem (nth argument_list j) !iter_table_list)
+                        then is_cor := false;
+                done;
+                if !is_cor = true then
+                begin
+                        if i > 0 then
+                                cor_assertions := !cor_assertions ^ " /\\ ";
+                        cor_assertions := !cor_assertions ^ !assertion_stmt;
+                end
+        done;
+        if !cor_assertions = "" then
+                cor_assertions := "true";
         !cor_assertions
 
 (* 
@@ -299,7 +341,7 @@ let gen_cor_assertions () =
 let gen_caller_arg arg_set old_arg new_arg =
         let caller_arguments = ref "" in
         let argument_list = StringSet.elements !arg_set in
-        for i = 0 to (length argument_list)-1
+        for i = 0 to (List.length argument_list)-1
         do
                 let current_arg = (nth argument_list i) in
                 if current_arg = old_arg then
@@ -322,7 +364,7 @@ let gen_caller_arg arg_set old_arg new_arg =
  *)
 let remove_cor_table table = 
         let cor_column_list = StringSet.elements !cor_column_set in
-        for i = 0 to (length cor_column_list)-1
+        for i = 0 to (List.length cor_column_list)-1
         do
                 let cor_column = (nth cor_column_list i) in
                 if Str.string_match ( Str.regexp (table^"_") ) cor_column 0 = true
@@ -354,7 +396,7 @@ let gen_multi_parameters () =
         multi_parameters := "";
         (* gen_multi_argument_set table; *)
         let argument_list = StringSet.elements !multi_argument_set in
-        for i = 0 to (length argument_list)-1
+        for i = 0 to (List.length argument_list)-1
         do
                 multi_parameters := " " ^ (nth argument_list i) ^ !multi_parameters;
         done;
@@ -372,7 +414,7 @@ let gen_iter_funs () =
         let pre_fun_arg_set = ref StringSet.empty in
         let iter_postcondition = ref "" in
         let check_condition = ref "" in
-        for i = 0 to (length !table_list)-1
+        for i = 0 to (List.length !table_list)-1
         do
                 let table = (nth !table_list i) in
                 let fun_name = "iter_" ^ table in
@@ -398,7 +440,7 @@ let gen_iter_funs () =
                 gen_multi_parameters ();
                 let arg_set = multi_argument_set in
                 caller_arguments := gen_caller_arg arg_set table "l";
-                iter_postcondition := gen_cor_assertions ()
+                iter_postcondition := gen_pre_cor_assertions ()
                 ^ " /\\ ( result = True <->  "
                 ^ gen_iter_binders !iter_table_list 
                 ^ gen_binder_mem !iter_table_list
@@ -406,7 +448,7 @@ let gen_iter_funs () =
                 ^ " )";
                 iter_fun_def := !iter_fun_def ^ 
                 "let rec " ^ fun_name ^ !multi_parameters ^ " =\n"
-                ^ "{ " ^ gen_cor_assertions () ^ " }\n"
+                ^ "{ " ^ gen_pre_cor_assertions () ^ " }\n"
                 ^ "match " ^ table ^ " with\n"
                 ^ "| Nil -> False\n"
                 ^ "| Cons {| " ^ gen_column_exp !col_name_list table 
@@ -414,7 +456,7 @@ let gen_iter_funs () =
                 ^ "else ( " ^ fun_name ^ !caller_arguments ^ " )\n"
                 ^ "end\n"
                 ^ "{ " ^ !iter_postcondition ^ " }\n";
-                if i = (length !table_list)-1 then
+                if i = (List.length !table_list)-1 then
                 begin
                         last_iter_fun := fun_name;
                         last_iter_fun_arg := !multi_parameters;
@@ -439,7 +481,7 @@ let gen_multi_delete_fun () =
         iter_table_list := append !iter_table_list [!target_table];
         gen_df_col_name_list !target_table;
         gen_multi_argument_set !target_table;
-        for i = 0 to (length !table_list)-1
+        for i = 0 to (List.length !table_list)-1
         do
                 multi_argument_set := StringSet.add (nth !table_list i) !multi_argument_set;
         done;
@@ -448,15 +490,17 @@ let gen_multi_delete_fun () =
         caller_arguments := gen_caller_arg arg_set !target_table "l";
         let binders = "forall x_" ^ !target_table ^ ": tupleType_" ^
         !target_table ^ ". " in
-        let delete_postcondition = gen_cor_assertions ()
+        let delete_postcondition = gen_post_cor_assertions !target_table
         ^ " /\\ " ^ binders
-        ^ " mem x_" ^ !target_table ^ " " ^ !target_table
-        ^ " -> "
+        ^ " mem x_" ^ !target_table ^ " result"
+        (* ^ " mem x_" ^ !target_table ^ " " ^ !target_table *)
+        ^ " -> not ( "
         ^ gen_iter_binders !pre_iter_table_list
         ^ gen_binder_mem !pre_iter_table_list
-        ^ gen_multi_predicate !iter_table_list in
+        ^ gen_multi_predicate !iter_table_list
+        ^ " ) " in
         multi_delete_fun := "let rec " ^ fun_name ^ !multi_parameters ^ " =\n"
-        ^ "{ " ^ gen_cor_assertions () ^ " }\n"
+        ^ "{ true }\n"
         ^ "match " ^ !target_table ^ " with\n"
         ^ "| Nil -> Nil\n"
         ^ "| Cons {| " ^ gen_column_exp !col_name_list !target_table 
@@ -465,7 +509,7 @@ let gen_multi_delete_fun () =
         ^ "else Cons {| " ^ gen_column_exp !col_name_list !target_table
         ^ " |} ( " ^ fun_name ^ !caller_arguments ^ " )\n"
         ^ "end\n"
-        ^ "{ " ^ delete_postcondition ^ " }\n";
+        ^ "{ " ^ gen_pre_cor_assertions () ^ " -> " ^ delete_postcondition ^ " }\n";
         !multi_delete_fun
 
 %}
@@ -476,6 +520,9 @@ let gen_multi_delete_fun () =
 %token DELETE FROM WHERE
 %token USING
 %token <string> STR
+%token <string> NUM
+%token <string> CHAR
+%token SINGLEQUOTE DOUBLEQUOTE
 %token LPAREN RPAREN
 %token OR AND
 %token NOT
@@ -640,9 +687,26 @@ factor:
     | column { $1 }
 ;
 constant: 
-    | STR   { $1 }
-    | PLUS STR  { $2 }
-    | MINUS STR { "-" ^ $2 }
+    | CHAR { $1 }
+    | DOUBLEQUOTE STR DOUBLEQUOTE
+    {
+        let str_exp = ref "" in
+        let tmp_exp = ref "" in
+        let get_code chr = string_of_int (code chr) in
+        let upper = (String.length $2)-1 in
+        for i = 0 to upper
+        do
+                tmp_exp := !str_exp;
+                if i = 0 then
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") Nil)"
+                else 
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") " ^ !tmp_exp ^ " )" ;
+        done;
+        !str_exp
+    }
+    | NUM   { $1 }
+    | PLUS NUM  { $2 }
+    | MINUS NUM { "-" ^ $2 }
 ;
 column: 
     | table_name DOT attribute_name 

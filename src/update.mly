@@ -4,6 +4,7 @@
 open Printf
 open List
 open Global
+open Char
 let binders = ref ""
 let target_table = ref ""
 (* let value_list = ref [""] *)
@@ -14,6 +15,16 @@ let rec_arguments = ref ""
 let column_exp = ref ""
 type attribute = { name: string; value: string }
 let update_list = ref []
+let pc_update_list = ref []
+let is_in_postcondition = ref false
+let is_in_paren = ref false
+let pc_exp = ref ""
+let tmp_pc_exp = ref ""
+let pc_term = ref ""
+let tmp_pc_term = ref ""
+let pc_factor = ref ""
+let tmp_pc_factor = ref ""
+let pc_column = ref ""
 
 let table_list = ref []
 let cor_column_set = ref StringSet.empty
@@ -272,12 +283,12 @@ let gen_multi_predicate cor_table_list =
         !iter_predicate
 
 (* 
- * gen_cor_assertions ():
+ * gen_pre_cor_assertions ():
  * Generate the corresponding expressions of assertions according to the tables
  * which have been already iterated ( iter_table_list ). An assertion will be
  * chosen only when all its corresponding tables are from iter_table_list.
  *)
-let gen_cor_assertions () =
+let gen_pre_cor_assertions () =
         let cor_assertions = ref "" in
         let is_cor = ref true in
         let assertion_stmt = ref "" in
@@ -301,6 +312,46 @@ let gen_cor_assertions () =
                         cor_assertions := !cor_assertions ^ !assertion_stmt;
                 end
         done;
+        if !cor_assertions = "" then
+                cor_assertions := "true";
+        !cor_assertions
+
+(* 
+ * gen_post_cor_assertions table: 
+ * Generate the corresponding expressions of assertions according to the tables
+ * which have been already iterated ( iter_table_list ). An assertion will be
+ * chosen only when all its corresponding tables are from iter_table_list.
+ *)
+let gen_post_cor_assertions table =
+        let cor_assertions = ref "" in
+        let is_cor = ref true in
+        let assertion_stmt = ref "" in
+        for i = 0 to (List.length !assertion_list)-1
+        do
+                is_cor := true;
+                assertion_stmt := "";
+                let assertion = (nth !assertion_list i) in
+                let argument_list = StringSet.elements (snd assertion) in
+                assertion_stmt := fst assertion;
+                for j = 0 to (List.length argument_list)-1
+                do
+                        if ( nth argument_list j ) = table then
+                                assertion_stmt := !assertion_stmt ^ " result"
+                        else
+                                assertion_stmt := !assertion_stmt ^ " " ^ ( nth argument_list j );
+
+                        if not (mem (nth argument_list j) !iter_table_list)
+                        then is_cor := false;
+                done;
+                if !is_cor = true then
+                begin
+                        if i > 0 then
+                                cor_assertions := !cor_assertions ^ " /\\ ";
+                        cor_assertions := !cor_assertions ^ !assertion_stmt;
+                end
+        done;
+        if !cor_assertions = "" then
+                cor_assertions := "true";
         !cor_assertions
 
 (* 
@@ -462,7 +513,7 @@ let gen_iter_funs () =
                 gen_multi_parameters ();
                 let arg_set = multi_argument_set in
                 caller_arguments := gen_caller_arg arg_set table "l";
-                iter_postcondition := gen_cor_assertions ()
+                iter_postcondition := gen_pre_cor_assertions ()
                 ^ " /\\ ( result = True <->  "
                 ^ gen_iter_binders !iter_table_list 
                 ^ gen_binder_mem !iter_table_list
@@ -470,7 +521,7 @@ let gen_iter_funs () =
                 ^ " )";
                 iter_fun_def := !iter_fun_def ^ 
                 "let rec " ^ fun_name ^ !multi_parameters ^ " =\n"
-                ^ "{ " ^ gen_cor_assertions () ^ " }\n"
+                ^ "{ " ^ gen_pre_cor_assertions () ^ " }\n"
                 ^ "match " ^ table ^ " with\n"
                 ^ "| Nil -> False\n"
                 ^ "| Cons {| " ^ gen_column_exp !col_name_list table "=" ";" 
@@ -514,19 +565,21 @@ let gen_multi_update_fun () =
         ^ ": tupleType_" ^ !target_table 
         ^ ", old_x_" ^ !target_table
         ^ ": tupleType_" ^ !target_table ^ "." in
-        let update_postcondition = gen_cor_assertions ()
+        let update_postcondition = gen_post_cor_assertions !target_table
+        (**
         ^ " /\\ " ^ binders
-        ^ " mem x_" ^ !target_table ^ " " ^ !target_table
-        ^ " -> mem old_x_" ^ !target_table ^ " ( old " ^ !target_table ^ " ) "
-        ^ " -> " ^ gen_updated_col !update_list !target_table
-        (* ^ gen_column_exp !col_name_list !target_table "<>" "&&" *)
+        ^ " mem x_" ^ !target_table ^ " result"
+        ^ " -> mem old_x_" ^ !target_table ^ " " ^ !target_table 
+        ^ " -> " ^ gen_updated_col !pc_update_list !target_table
         ^ " \/ not ("
         ^ gen_iter_binders !pre_iter_table_list
         ^ gen_binder_mem !pre_iter_table_list
         ^ gen_multi_predicate !iter_table_list
-        ^ ")" in
+        ^ ")" 
+        **)
+        in
         multi_update_fun := "let rec " ^ fun_name ^ !multi_parameters ^ " =\n"
-        ^ "{ " ^ gen_cor_assertions () ^ " }\n"
+        ^ "{ true }\n"
         ^ "match " ^ !target_table ^ " with\n"
         ^ "| Nil -> Nil\n"
         ^ "| Cons {| " ^ gen_column_exp !col_name_list !target_table "=" ";" 
@@ -536,21 +589,32 @@ let gen_multi_update_fun () =
         ^ "else Cons {| " ^ gen_column_exp !col_name_list !target_table "=" ";"
         ^ " |} ( " ^ fun_name ^ !caller_arguments ^ " )\n"
         ^ "end\n"
-        ^ "{ " ^ update_postcondition ^ " }\n";
+        ^ "{ " ^ gen_pre_cor_assertions () ^ " -> " ^ update_postcondition ^ " }\n";
         !multi_update_fun
+
+let gen_pc_update_list col_name col_value = 
+            pc_update_list := append !pc_update_list [{ name = col_name; value = col_value }]
+            (*
+            printf "is1: %b\n" !is_in_postcondition;
+            printf "test: %s\n" col_value
+            *)
+
 
 %}
 
 
 /* Ocamlyacc Declarations */
 %token ENDOFSQL 
-%token UPDATE SET WHERE
+%token UPDATE SET WHERE FROM
 %token <string> STR
+%token <string> NUM
+%token <string> CHAR
+%token SINGLEQUOTE DOUBLEQUOTE
 %token LPAREN RPAREN
 %token OR AND
 %token NOT
 %token EXISTS
-%token SELECT FROM
+%token SELECT 
 %token EQU NEQ LT LEQ GT GEQ
 %token PLUS MINUS STAR SLASH
 %token BETWEEN
@@ -562,6 +626,10 @@ let gen_multi_update_fun () =
 
 %start input
 %type <unit> input
+%type <string list> exp
+%type <string list> term
+%type <string list> factor
+%type <string list> column
 
 /* Grammar follows */
 %%
@@ -576,14 +644,14 @@ input:
     }
 ;
 line: 
-    | ENDOFSQL    { }
+    | ENDOFSQL    { } 
     | update_stmt ENDOFSQL 
     { 
             operation_exp := !operation_exp ^ $1;
     }
 ;
 update_stmt: 
-    | UPDATE table_name SET set_clause_list
+    | UPDATE target_table_name SET set_clause_list
     {
             gen_df_col_name_list $2;
             "let rec update " ^ gen_single_args () ^ " = \n"
@@ -596,7 +664,7 @@ update_stmt:
             ^ "end\n"
             ^ "{ " ^ gen_single_postcondition $2 ^ " }\n"
     }
-    | UPDATE table_name SET set_clause_list WHERE search_condition
+    | UPDATE target_table_name SET set_clause_list WHERE search_condition
     {
             gen_df_col_name_list $2;
             (* "let rec update (" ^ $2 ^ ": list tupleType_" ^ $2 ^ " ) =\n" *)
@@ -616,6 +684,7 @@ update_stmt:
     }
     | UPDATE target_table_name SET set_clause_list FROM table_reference_list WHERE search_condition
     {
+            is_in_postcondition := false;
             sc_stmt := $8;
             let sc_predicate = gen_predicate () in
             let iter_fun_def = gen_iter_funs () in
@@ -670,16 +739,24 @@ set_clause_list:
     | set_clause { $1 }
     | set_clause_list COMMA set_clause { $1; $3 } 
 ;
-set_clause: set_column EQU constant
+set_clause: 
+    /* set_column EQU constant */
+    set_column EQU exp
     {
+            (*
             update_list := append !update_list [{ name = $1; value = $3 }];
+            pc_update_list := append !pc_update_list [{ name = $1; value = !pc_exp }];
+            *)
+            update_list := append !update_list [{ name = $1; value = (nth $3 0) }];
+            pc_update_list := append !pc_update_list [{ name = $1; value = (nth
+            $3 1) }];
             (* 
             for i = 0 to (length !update_list)-1 do
                    printf "name = %s, value = %s\n" (nth !update_list i).name
                    (nth !update_list i).value
             done;
             *)
-            $1 ^ "=" ^ $3
+            $1 ^ "=" ^ (nth $3 0)
     }
 ;
 set_column: 
@@ -729,63 +806,192 @@ table_list:
 tuple_name: STR { $1 }
 ;
 comparison_predicate: 
-    | exp EQU exp   { $1 ^ " = " ^ $3 }
-    | exp NEQ exp   { $1 ^ " <> " ^ $3 }
-    | exp LT exp    { $1 ^ " < " ^ $3 }
-    | exp LEQ exp   { $1 ^ " <= " ^ $3 }
-    | exp GT exp    { $1 ^ " > " ^ $3 }
-    | exp GEQ exp   { $1 ^ " >= " ^ $3 }
+    | exp EQU exp   
+    { 
+            (nth $1 0) ^ " = " ^ (nth $3 0) 
+    }
+    | exp NEQ exp   
+    { 
+            (nth $1 0) ^ " <> " ^ (nth $3 0) 
+    }
+    | exp LT exp    
+    { 
+            (nth $1 0) ^ " < " ^ (nth $3 0) 
+    }
+    | exp LEQ exp   
+    { 
+            (nth $1 0) ^ " <= " ^ (nth $3 0) 
+    }
+    | exp GT exp    
+    { 
+            (nth $1 0) ^ " > " ^ (nth $3 0) 
+    }
+    | exp GEQ exp   
+    { 
+            (nth $1 0) ^ " >= " ^ (nth $3 0) 
+    }
 ;
 exp: 
-    | term { $1 }
-    | exp PLUS term { $1 ^ " + " ^ $3 }
-    | exp MINUS term { $1 ^ " - " ^ $3 }
+    | term 
+    {
+            (*
+            tmp_pc_exp := !pc_term;
+            pc_exp := !pc_exp ^ !pc_term;
+            *)
+            tmp_pc_exp := !pc_term;
+            if !is_in_paren = false then
+                    pc_exp := !pc_term
+            else
+                    is_in_paren := false;
+            (* $1 *) 
+            [(nth $1 0); (nth $1 1)] 
+    }
+    | exp PLUS term 
+    {
+            (* pc_exp := !pc_exp ^ !tmp_pc_exp ^ " + " ^ !pc_term; *)
+            pc_exp := !pc_exp ^ " + " ^ !pc_term;
+            (* $1 ^ " + " ^ $3 *) 
+            [(nth $1 0) ^ " + " ^ (nth $3 0); (nth $1 1) ^ " + " ^ (nth $3 1)]
+    }
+    | exp MINUS term 
+    { 
+            (* pc_exp := !pc_exp ^ !tmp_pc_exp ^ " - " ^ !pc_term; *)
+            pc_exp := !pc_exp ^ " - " ^ !pc_term;
+            (* $1 ^ " - " ^ $3 *) 
+            [(nth $1 0) ^ " - " ^ (nth $3 0); (nth $1 1) ^ " - " ^ (nth $3 1)]
+    }
 ;
 term: 
-    | factor { $1 }
-    | term STAR factor  { $1 ^ " * " ^ $3 }
-    | term SLASH factor { $1 ^ " / " ^ $3 }
+    | factor 
+    {
+            (* tmp_pc_term := !pc_factor; *)
+            pc_term := !pc_factor;
+            (* $1 *) 
+            [(nth $1 0); (nth $1 1)] 
+    }
+    | term STAR factor  
+    { 
+            (* pc_term := !pc_term ^ !tmp_pc_term ^ " * " ^ !pc_factor; *)
+            pc_term := !pc_term ^ " * " ^ !pc_factor;
+            (* $1 ^ " * " ^ $3 *) 
+            [(nth $1 0) ^ " * " ^ (nth $3 0); (nth $1 1) ^ " * " ^ (nth $3 1)] 
+    }
+    | term SLASH factor 
+    { 
+            (* pc_term := !pc_term ^ !tmp_pc_term ^ " / " ^ !pc_factor; *)
+            pc_term := !pc_term ^ " / " ^ !pc_factor;
+            (* $1 ^ " / " ^ $3 *)
+            [(nth $1 0) ^ " / " ^ (nth $3 0); (nth $1 1) ^ " / " ^ (nth $3 1)]
+    }
 ;
 factor: 
-    | LPAREN exp RPAREN { " ( " ^ $2 ^ " ) " }
-    | constant { $1 }
-    | column { $1 }
+    | LPAREN exp RPAREN 
+    { 
+            is_in_paren := true;
+            pc_factor := " ( " ^ !tmp_pc_exp ^ " ) "; 
+            (* pc_factor := " ( " ^ !pc_exp ^ " ) "; *)
+            (* " ( " ^ $2 ^ " ) " *) 
+            [" ( " ^ (nth $2 0) ^ " ) "; " ( " ^ (nth $2 1) ^ " ) "]
+    }
+    | constant 
+    {
+            pc_factor := $1;
+            (* $1 *)
+            [$1; $1] 
+    }
+    | column 
+    {
+            pc_factor := !pc_column; 
+            $1 
+    }
 ;
 constant: 
-    | STR   { $1 }
-    | PLUS STR  { $2 }
-    | MINUS STR { "-" ^ $2 }
+    | CHAR { $1 }
+    | DOUBLEQUOTE STR DOUBLEQUOTE
+    {
+        let str_exp = ref "" in
+        let tmp_exp = ref "" in
+        let get_code chr = string_of_int (code chr) in
+        let upper = (String.length $2)-1 in
+        for i = 0 to upper
+        do
+                tmp_exp := !str_exp;
+                if i = 0 then
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") Nil)"
+                else 
+                        str_exp := "(Cons (chr " ^ (get_code $2.[upper-i]) ^ ") " ^ !tmp_exp ^ " )" ;
+        done;
+        !str_exp
+    }
+    | NUM   { $1 }
+    | PLUS NUM  { $2 }
+    | MINUS NUM { "-" ^ $2 }
 ;
 column: 
     | table_name DOT attribute_name 
     {
             cor_column_set := StringSet.add ($1 ^ "_" ^ $3 ^ "_value") !cor_column_set;
-            $1 ^ "_" ^ $3 ^ "_value" 
+            if $1 = !target_table then
+                    pc_column := "old_x_" ^ $1 ^ "." ^ $3
+            else
+                    pc_column := "x_" ^ $1 ^ "." ^ $3;
+            (* $1 ^ "_" ^ $3 ^ "_value" *)
+            [$1 ^ "_" ^ $3 ^ "_value"; !pc_column] 
     }
     | PLUS table_name DOT attribute_name 
     { 
             cor_column_set := StringSet.add ($2 ^ "_" ^ $4 ^ "_value") !cor_column_set;
-            $2 ^ "_" ^ $4 ^ "_value" 
+            if $2 = !target_table then
+                    pc_column := "old_x_" ^ $2 ^ "." ^ $4
+            else
+                    pc_column := "x_" ^ $2 ^ "." ^ $4;
+            (* $2 ^ "_" ^ $4 ^ "_value" *) 
+            [$2 ^ "_" ^ $4 ^ "_value"; !pc_column] 
+            (*
+            if !is_in_postcondition = false then
+                    $2 ^ "_" ^ $4 ^ "_value"
+            else begin
+                    if $2 = !target_table then
+                            "old_x_" ^ $2 ^ "." ^ $4
+            else
+                    "x_" ^ $2 ^ "." ^ $4
+            end
+            *)
     }
     | MINUS table_name DOT attribute_name 
     { 
             cor_column_set := StringSet.add ($2 ^ "_" ^ $4 ^ "_value") !cor_column_set;
-            "-" ^ $2 ^ "_" ^ $4 ^ "_value" 
+            if $2 = !target_table then
+                    pc_column := "-old_x_" ^ $2 ^ "." ^ $4
+            else
+                    pc_column := "-x_" ^ $2 ^ "." ^ $4;
+            (* "-" ^ $2 ^ "_" ^ $4 ^ "_value" *) 
+            ["-" ^ $2 ^ "_" ^ $4 ^ "_value"; !pc_column] 
+            (*
+            if !is_in_postcondition = false then
+                    "-" ^ $2 ^ "_" ^ $4 ^ "_value"
+            else begin
+                    if $2 = !target_table then
+                            "_" ^ "old_x_" ^ $2 ^ "." ^ $4
+            else
+                    "-" ^ "x_" ^ $2 ^ "." ^ $4
+            end 
+            *)
     }
 ;
 attribute_name: STR { $1 }
 ;
 between_predicate: 
     | exp BETWEEN constant AND constant 
-    { " ( " ^ $1 ^ " >= " ^ $3 ^ " ) /\\ ( " ^ $1 ^ " <= " ^ $5 ^ " ) " }
+    { " ( " ^ (nth $1 0) ^ " >= " ^ $3 ^ " ) /\\ ( " ^ (nth $1 0) ^ " <= " ^ $5 ^ " ) " }
     | exp NOT BETWEEN constant AND constant 
-    { " ( " ^ $1 ^ " < " ^ $4 ^ " ) \/ ( " ^ $1 ^  " > " ^ $6 ^ " ) " }
+    { " ( " ^ (nth $1 0) ^ " < " ^ $4 ^ " ) \/ ( " ^ (nth $1 0) ^  " > " ^ $6 ^ " ) " }
 ;
 in_predicate: 
     | exp IN LPAREN in_value_list RPAREN 
-    { " mem " ^ $1 ^ " ( " ^ $4 ^ " ) " }
+    { " mem " ^ (nth $1 0) ^ " ( " ^ $4 ^ " ) " }
     | exp NOT IN LPAREN in_value_list RPAREN 
-    { " not ( mem " ^ $1 ^ " ( " ^ $5 ^ " ) ) " }
+    { " not ( mem " ^ (nth $1 0) ^ " ( " ^ $5 ^ " ) ) " }
 ;
 in_value_list: 
     | constant 
@@ -794,8 +1000,8 @@ in_value_list:
     { " (Cons " ^ $1 ^ $3 ^ ") " }
 ;
 null_predicate: 
-    | column IS NULL { "(Cons " ^ $1 ^ " Nil)" ^ " = Nil " }
-    | column IS NOT NULL { "(Cons " ^ $1 ^ " Nil)" ^ " <> Nil " }
+    | column IS NULL { "(Cons " ^ (nth $1 0) ^ " Nil)" ^ " = Nil " }
+    | column IS NOT NULL { "(Cons " ^ (nth $1 0) ^ " Nil)" ^ " <> Nil " }
 
 
 %%
