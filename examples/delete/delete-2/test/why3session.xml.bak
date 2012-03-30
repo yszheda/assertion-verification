@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session SYSTEM "why3session.dtd">
+<why3session
+ name="test/why3session.xml">
+ <prover
+  id="alt-ergo"
+  name="Alt-Ergo"
+  version="0.94"/>
+ <prover
+  id="coq"
+  name="Coq"
+  version="8.3pl2"/>
+ <prover
+  id="cvc3"
+  name="CVC3"
+  version="2.4.1"/>
+ <prover
+  id="yices"
+  name="Yices"
+  version="1.0.32"/>
+ <file
+  name="../test.mlw"
+  verified="false"
+  expanded="true">
+  <theory
+   name="WP Test"
+   verified="false"
+   expanded="true">
+   <goal
+    name="WP_parameter iter_r1"
+    expl="parameter iter_r1"
+    sum="008ac348e27e28f1acba01c34b3f8126"
+    proved="true"
+    expanded="true"
+    shape="CV1aNilasc_predicateV2V0Aamemamk tupleType_r1V2V3V1ENaConsamk tupleType_r1VVViainfix =V0V4asc_predicateV7V0Aamemamk tupleType_r1V7V8V1Easc_predicateV10V0Aamemamk tupleType_r1V10V11V1Eqainfix =V9aTrueIasc_predicateV12V0Aamemamk tupleType_r1V12V13V6Eqainfix =V9aTrueFFF">
+    <proof
+     prover="alt-ergo"
+     timelimit="10"
+     edited=""
+     obsolete="false">
+     <result status="valid" time="0.02"/>
+    </proof>
+   </goal>
+   <goal
+    name="WP_parameter delete_r"
+    expl="parameter delete_r"
+    sum="23b5b7de00658d521cf9de2c56b6a29b"
+    proved="false"
+    expanded="true"
+    shape="CV1aNilasc_predicateV4V2Aamemamk tupleType_r1V4V5V0ENIamemamk tupleType_rV2V3aNilFAaexampleaNilV0IaexampleV1V0aConsamk tupleType_rVVViainfix =V9aTrueasc_predicateV13V11Aamemamk tupleType_r1V13V14V0ENIamemamk tupleType_rV11V12V10FAaexampleV10V0IaexampleV1V0Iasc_predicateV17V15Aamemamk tupleType_r1V17V18V0ENIamemamk tupleType_rV15V16V10FAaexampleV10V0IaexampleV8V0Fasc_predicateV22V20Aamemamk tupleType_r1V22V23V0ENIamemamk tupleType_rV20V21aConsamk tupleType_rV6V7V19FAaexampleaConsamk tupleType_rV6V7V19V0IaexampleV1V0Iasc_predicateV26V24Aamemamk tupleType_r1V26V27V0ENIamemamk tupleType_rV24V25V19FAaexampleV19V0IaexampleV8V0FIasc_predicateV28V6Aamemamk tupleType_r1V28V29V0Eqainfix =V9aTrueFFF">
+    <transf
+     name="split_goal"
+     proved="false"
+     expanded="true">
+     <goal
+      name="WP_parameter delete_r.1"
+      expl="parameter delete_r"
+      sum="75be44cdb1882ddc46d3c0a5420957b9"
+      proved="true"
+      expanded="true"
+      shape="CV1aNilasc_predicateV4V2Aamemamk tupleType_r1V4V5V0ENIamemamk tupleType_rV2V3aNilFAaexampleaNilV0IaexampleV1V0aConsamk tupleType_rVVVtFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.02"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter delete_r.2"
+      expl="parameter delete_r"
+      sum="91175afeb35902efec8b8eac0d469d25"
+      proved="false"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_rVVVasc_predicateV9V7Aamemamk tupleType_r1V9V10V0ENIamemamk tupleType_rV7V8V6FAaexampleV6V0IaexampleV1V0Iasc_predicateV13V11Aamemamk tupleType_r1V13V14V0ENIamemamk tupleType_rV11V12V6FAaexampleV6V0IaexampleV4V0FIainfix =V5aTrueIasc_predicateV15V2Aamemamk tupleType_r1V15V16V0Eqainfix =V5aTrueFFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="timeout" time="11.68"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter delete_r.3"
+      expl="parameter delete_r"
+      sum="e26c100f3905262b932942ece0edb73a"
+      proved="false"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_rVVVasc_predicateV9V7Aamemamk tupleType_r1V9V10V0ENIamemamk tupleType_rV7V8aConsamk tupleType_rV2V3V6FAaexampleaConsamk tupleType_rV2V3V6V0IaexampleV1V0Iasc_predicateV13V11Aamemamk tupleType_r1V13V14V0ENIamemamk tupleType_rV11V12V6FAaexampleV6V0IaexampleV4V0FIainfix =V5aTrueNIasc_predicateV15V2Aamemamk tupleType_r1V15V16V0Eqainfix =V5aTrueFFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="timeout" time="10.97"/>
+      </proof>
+     </goal>
+    </transf>
+   </goal>
+  </theory>
+ </file>
+</why3session>

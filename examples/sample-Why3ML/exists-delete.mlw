@@ -1,0 +1,34 @@
+module Test
+use import int.Int
+use import list.Append
+use import list.List
+use import list.Mem
+type tupleType_r = {| a1: int; a2: int |}
+type tupleType_r1 = {| b1: int; b2: int |}
+predicate example ( r: list tupleType_r ) = 
+( exists x: tupleType_r. mem x r /\ x.a1 = 1 )
+predicate sc_predicate ( r_a1_value: int ) =
+ ( r_a1_value < 0 ) 
+let rec delete r =
+        { true }
+        match r with
+        | Nil -> Nil
+        | Cons {| a1 = r_a1_value; a2 = r_a2_value |} l ->
+                        if ( r_a1_value < 0 ) then (delete l)
+                        else ( Cons {| a1 = r_a1_value; a2 = r_a2_value |}
+                        (delete l) )
+        end
+        { example r -> example result }
+let rec delete1 r =
+        { true }
+        match r with
+        | Nil -> Nil
+        | Cons {| a1 = r_a1_value; a2 = r_a2_value |} l ->
+                        if ( r_a1_value < 0 ) then (delete1 l)
+                        else ( Cons {| a1 = r_a1_value; a2 = r_a2_value |}
+                        (delete1 l) )
+        end
+        { example r -> 
+                not ( forall x_r: tupleType_r. mem x_r (old r) -> ( x_r.a1 = 1 ->
+                        x_r.a1 < 0 ) ) }
+end

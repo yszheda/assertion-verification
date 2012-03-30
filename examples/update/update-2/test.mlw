@@ -1,0 +1,29 @@
+module Test
+use import int.Int
+use import list.Append
+use import list.List
+use import list.Mem
+type tupleType_r = {| a1: int; a2: int |}
+type tupleType_r1 = {| b1: int; b2: int |}
+predicate example ( r: list tupleType_r )  ( r1: list tupleType_r1 )  = 
+ ( not ( exists x1: tupleType_r1, x: tupleType_r. mem x1 r1 /\  mem x r /\ x.a1 < x1.b1 )  ) 
+predicate sc_predicate ( r1_b1_value: int ) ( r_a1_value: int ) =
+ ( r_a1_value = r1_b1_value ) 
+let rec iter_r1 r_a1_value r1 =
+{ true }
+match r1 with
+| Nil -> False
+| Cons {| b1 = r1_b1_value ; b2 = r1_b2_value |} l -> if  ( r_a1_value = r1_b1_value )  then True
+else ( iter_r1 r_a1_value l )
+end
+{ true /\ ( result = True <->  exists x_r1: tupleType_r1. mem x_r1 r1 /\ ( sc_predicate x_r1.b1 r_a1_value ) ) }
+let rec update_r r1 r =
+{ true }
+match r with
+| Nil -> Nil
+| Cons {| a1 = r_a1_value ; a2 = r_a2_value |} l -> if ( iter_r1 r_a1_value r1 ) then Cons {| a1 = 2 + r_a1_value; a2 = r_a2_value |} ( update_r r1 l )
+else Cons {| a1 = r_a1_value ; a2 = r_a2_value |} ( update_r r1 l )
+end
+{ example r r1 -> example result r1 }
+
+end

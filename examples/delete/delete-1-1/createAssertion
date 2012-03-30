@@ -1,0 +1,4 @@
+CREATE ASSERTION example
+CHECK (NOT EXISTS (SELECT *
+                   FROM r x
+                   WHERE x.a1 <> 1));

@@ -1,0 +1,3 @@
+UPDATE r
+SET r.a1=1, r.a2=1
+WHERE ( r.a1 < r.a2 + 3 );

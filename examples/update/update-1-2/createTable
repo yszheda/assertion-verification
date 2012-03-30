@@ -1,0 +1,2 @@
+CREATE TABLE r 
+(a1: INTEGER, a2: INTEGER);

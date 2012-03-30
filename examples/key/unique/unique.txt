@@ -1,0 +1,4 @@
+CREATE ASSERTION unique
+CHECK (NOT EXISTS (SELECT *
+		FROM r x
+		WHERE ( EXISTS (SELECT * FROM r y WHERE (x <> y AND x.a1=y.a1) ) ) ) );

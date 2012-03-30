@@ -1,0 +1,10 @@
+module Test
+use import int.Int
+use import list.Append
+use import list.List
+use import list.Mem
+type tupleType_r = {| a1: int; a2: int |}
+predicate example ( r: list tupleType_r )  = 
+ ( not ( exists x: tupleType_r. mem x r /\ x.a1 <> x.a2 )  ) 
+
+end

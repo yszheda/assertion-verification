@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session SYSTEM "why3session.dtd">
+<why3session
+ name="test/why3session.xml">
+ <prover
+  id="alt-ergo"
+  name="Alt-Ergo"
+  version="0.94"/>
+ <prover
+  id="coq"
+  name="Coq"
+  version="8.3pl2"/>
+ <prover
+  id="cvc3"
+  name="CVC3"
+  version="2.4.1"/>
+ <prover
+  id="yices"
+  name="Yices"
+  version="1.0.32"/>
+ <file
+  name="../test.mlw"
+  verified="true"
+  expanded="true">
+  <theory
+   name="WP Test"
+   verified="true"
+   expanded="true">
+   <goal
+    name="WP_parameter delete"
+    expl="parameter delete"
+    sum="dfd247d1c8ca99d95057079e98ac6a6d"
+    proved="true"
+    expanded="true"
+    shape="CV0aNilaexampleaNilIaexampleV0aConsamk tupleType_rVVViainfix =V1c1aexampleV4IaexampleV0IaexampleV4IaexampleV3FaexampleaConsamk tupleType_rV1V2V5IaexampleV0IaexampleV5IaexampleV3FF">
+    <transf
+     name="split_goal"
+     proved="true"
+     expanded="true">
+     <goal
+      name="WP_parameter delete.1"
+      expl="parameter delete"
+      sum="af69ed1e069d7c1e2e54f4ec784ec28f"
+      proved="true"
+      expanded="true"
+      shape="CV0aNilaexampleaNilIaexampleV0aConsamk tupleType_rVVVtF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.01"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter delete.2"
+      expl="parameter delete"
+      sum="92766ca06885eca15eaaa203aeaab64e"
+      proved="true"
+      expanded="true"
+      shape="CV0aNiltaConsamk tupleType_rVVVaexampleV4IaexampleV0IaexampleV4IaexampleV3FIainfix =V1c1F">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.02"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter delete.3"
+      expl="parameter delete"
+      sum="97fe9738a70ab41d116c1ecc28ee186d"
+      proved="true"
+      expanded="true"
+      shape="CV0aNiltaConsamk tupleType_rVVVaexampleaConsamk tupleType_rV1V2V4IaexampleV0IaexampleV4IaexampleV3FIainfix =V1c1NF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.05"/>
+      </proof>
+     </goal>
+    </transf>
+   </goal>
+  </theory>
+ </file>
+</why3session>

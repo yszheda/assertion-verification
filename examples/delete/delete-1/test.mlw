@@ -1,0 +1,18 @@
+module Test
+use import int.Int
+use import list.Append
+use import list.List
+use import list.Mem
+type tupleType_r = {| a1: int; a2: int |}
+predicate example ( r: list tupleType_r )  = 
+ ( not ( exists x: tupleType_r. mem x r /\ x.a1 <> x.a2 )  ) 
+let rec delete  ( r: list tupleType_r )  = 
+{ true }
+match r with
+| Nil -> Nil
+| Cons {| a1 = r_a1_value; a2 = r_a2_value |} l -> if  ( r_a1_value = r_a2_value ) then (delete l)
+else Cons {| a1 = r_a1_value; a2 = r_a2_value |} (delete l)
+end
+{ ( example r ) -> ( example result )  }
+
+end

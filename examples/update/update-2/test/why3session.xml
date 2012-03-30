@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session SYSTEM "why3session.dtd">
+<why3session
+ name="test/why3session.xml">
+ <prover
+  id="alt-ergo"
+  name="Alt-Ergo"
+  version="0.94"/>
+ <prover
+  id="coq"
+  name="Coq"
+  version="8.3pl2"/>
+ <prover
+  id="cvc3"
+  name="CVC3"
+  version="2.4.1"/>
+ <prover
+  id="yices"
+  name="Yices"
+  version="1.0.32"/>
+ <file
+  name="../test.mlw"
+  verified="false"
+  expanded="true">
+  <theory
+   name="WP Test"
+   verified="false"
+   expanded="true">
+   <goal
+    name="WP_parameter iter_r1"
+    expl="parameter iter_r1"
+    sum="130ce1e16e8cf0c29c7dc3bfdd17c8a9"
+    proved="true"
+    expanded="true"
+    shape="CV1aNilasc_predicateV2V0Aamemamk tupleType_r1V2V3V1ENaConsamk tupleType_r1VVViainfix =V0V4asc_predicateV7V0Aamemamk tupleType_r1V7V8V1Easc_predicateV10V0Aamemamk tupleType_r1V10V11V1Eqainfix =V9aTrueIasc_predicateV12V0Aamemamk tupleType_r1V12V13V6Eqainfix =V9aTrueFFF">
+    <transf
+     name="split_goal"
+     proved="true"
+     expanded="true">
+     <goal
+      name="WP_parameter iter_r1.1"
+      expl="parameter iter_r1"
+      sum="289f4801a40740889b8e471127f36a1e"
+      proved="true"
+      expanded="true"
+      shape="CV1aNilasc_predicateV2V0Aamemamk tupleType_r1V2V3V1ENaConsamk tupleType_r1VVVtFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.02"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter iter_r1.2"
+      expl="parameter iter_r1"
+      sum="08b23020fbc09bcba268e3344aa839fd"
+      proved="true"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_r1VVVasc_predicateV5V0Aamemamk tupleType_r1V5V6V1EIainfix =V0V2FF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.02"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter iter_r1.3"
+      expl="parameter iter_r1"
+      sum="7afb87e6ed3e67720e4febe279094da4"
+      proved="true"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_r1VVVasc_predicateV6V0Aamemamk tupleType_r1V6V7V1EIainfix =V5aTrueIasc_predicateV8V0Aamemamk tupleType_r1V8V9V4Eqainfix =V5aTrueFIainfix =V0V2NFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.02"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter iter_r1.4"
+      expl="parameter iter_r1"
+      sum="43c8e1a40819ff70ff551bc732031c3d"
+      proved="true"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_r1VVVainfix =V5aTrueIasc_predicateV6V0Aamemamk tupleType_r1V6V7V1EIasc_predicateV8V0Aamemamk tupleType_r1V8V9V4Eqainfix =V5aTrueFIainfix =V0V2NFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.01"/>
+      </proof>
+     </goal>
+    </transf>
+   </goal>
+   <goal
+    name="WP_parameter update_r"
+    expl="parameter update_r"
+    sum="b67602207f2240612e297562310a32f6"
+    proved="false"
+    expanded="true"
+    shape="CV1aNilaexampleaNilV0IaexampleV1V0aConsamk tupleType_rVVViainfix =V5aTrueaexampleaConsamk tupleType_rainfix +c2V2V3V6V0IaexampleV1V0IaexampleV6V0IaexampleV4V0FaexampleaConsamk tupleType_rV2V3V7V0IaexampleV1V0IaexampleV7V0IaexampleV4V0FIasc_predicateV8V2Aamemamk tupleType_r1V8V9V0Eqainfix =V5aTrueFFF">
+    <transf
+     name="split_goal"
+     proved="false"
+     expanded="true">
+     <goal
+      name="WP_parameter update_r.1"
+      expl="parameter update_r"
+      sum="f230cf41a97b86e1504ee34a8dfab3d8"
+      proved="true"
+      expanded="true"
+      shape="CV1aNilaexampleaNilV0IaexampleV1V0aConsamk tupleType_rVVVtFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="valid" time="0.01"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter update_r.2"
+      expl="parameter update_r"
+      sum="8816f80c96b0945854d12dd9a9529456"
+      proved="false"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_rVVVaexampleaConsamk tupleType_rainfix +c2V2V3V6V0IaexampleV1V0IaexampleV6V0IaexampleV4V0FIainfix =V5aTrueIasc_predicateV7V2Aamemamk tupleType_r1V7V8V0Eqainfix =V5aTrueFFF">
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="timeout" time="19.26"/>
+      </proof>
+      <proof
+       prover="cvc3"
+       timelimit="10"
+       edited=""
+       obsolete="true">
+       <result status="timeout" time="11.95"/>
+      </proof>
+      <proof
+       prover="yices"
+       timelimit="10"
+       edited=""
+       obsolete="true">
+       <result status="unknown" time="1.73"/>
+      </proof>
+     </goal>
+     <goal
+      name="WP_parameter update_r.3"
+      expl="parameter update_r"
+      sum="44fce610f35e41c1152662d2a0b2a415"
+      proved="false"
+      expanded="true"
+      shape="CV1aNiltaConsamk tupleType_rVVVaexampleaConsamk tupleType_rV2V3V6V0IaexampleV1V0IaexampleV6V0IaexampleV4V0FIainfix =V5aTrueNIasc_predicateV7V2Aamemamk tupleType_r1V7V8V0Eqainfix =V5aTrueFFF">
+      <proof
+       prover="cvc3"
+       timelimit="10"
+       edited=""
+       obsolete="true">
+       <result status="timeout" time="11.35"/>
+      </proof>
+      <proof
+       prover="alt-ergo"
+       timelimit="10"
+       edited=""
+       obsolete="false">
+       <result status="timeout" time="20.39"/>
+      </proof>
+      <proof
+       prover="yices"
+       timelimit="10"
+       edited=""
+       obsolete="true">
+       <result status="timeout" time="11.12"/>
+      </proof>
+     </goal>
+    </transf>
+   </goal>
+  </theory>
+ </file>
+</why3session>

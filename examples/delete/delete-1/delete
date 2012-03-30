@@ -1,0 +1,2 @@
+DELETE FROM r
+WHERE ( r.a1 = r.a2 );

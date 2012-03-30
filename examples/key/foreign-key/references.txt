@@ -1,0 +1,5 @@
+CREATE ASSERTION references
+CHECK (NOT EXISTS (SELECT *
+		FROM r x
+		WHERE ( NOT EXISTS (SELECT * FROM r1 y WHERE (x.a1 = y.b1) ) ) ) );
+

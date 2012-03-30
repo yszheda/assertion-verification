@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session SYSTEM "why3session.dtd">
+<why3session
+ name="test/why3session.xml">
+ <prover
+  id="alt-ergo"
+  name="Alt-Ergo"
+  version="0.94"/>
+ <prover
+  id="cvc3"
+  name="CVC3"
+  version="2.4.1"/>
+ <file
+  name="../test.mlw"
+  verified="true"
+  expanded="true">
+  <theory
+   name="WP Test"
+   verified="true"
+   expanded="true">
+   <goal
+    name="WP_parameter insert"
+    expl="normal postcondition"
+    sum="976a43aee1e1e761dff195fc1964a447"
+    proved="true"
+    expanded="true"
+    shape="amyassertionainfix ++V0aConsamk tupleType_rc1c1aNilIamyassertionV0F">
+    <proof
+     prover="alt-ergo"
+     timelimit="10"
+     edited=""
+     obsolete="false">
+     <result status="valid" time="0.05"/>
+    </proof>
+   </goal>
+  </theory>
+ </file>
+</why3session>
