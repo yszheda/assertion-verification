@@ -1,0 +1,510 @@
+%        File: manual.tex
+%     Created: 二  2月 07 12:00 下午 2012 C
+% Last Change: 二  2月 07 12:00 下午 2012 C
+%
+\documentclass[a4paper]{article}
+\title{Manual}
+\author{Shuai Yuan}
+\date{}
+\usepackage{amsfonts}
+\begin{document}
+\maketitle{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% define new command
+\newcommand{\bdm}
+{
+\begin{displaymath}
+\begin{array}{rcl}
+}
+\newcommand{\edm}
+{
+\end{array}
+\end{displaymath}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The program ``translation'' parse SQL phrases into Why3ML program. It mainly contains the following parts:
+\begin{itemize}
+  \item[-] header of Why3ML program, mainly commands of importing modules.
+  \item[-] parser for the SQL table definition, this part translate the ``CREATE TABLE'' phrase into the definition of the type of the corresponding table's tuple.
+  \item[-] parser for the SQL assertion, this part translate the ``CREATE ASSERTION'' phrase into ``predicate'' in the Why3ML program.
+  \item[-] parser for the SQL INSERT command, this part translate the SQL INSERT command into a method in the Why3ML program.
+  \item[-] parser for the SQL DELETE command, this part translate the SQL INSERT command into a method in the Why3ML program.
+  \item[-] parser for the SQL UPDATE command, this part translate the SQL INSERT command into a method in the Why3ML program.
+\end{itemize}
+
+\section{Parser for the SQL Table Definition}
+The source language of SQL table definition is expressed in the following grammar:
+\bdm
+\textrm{$<$table definition$>$} &::=& \textrm{CREATE TABLE \textit{$<$table name$>$}} \\ 
+&& \left( \textrm{$<$table element list$>$} \right) \\
+\textrm{$<$table element list$>$} &::=& \textrm{$<$table element$>$} \\
+&|& \textrm{$<$table element list$>$} , \textrm{$<$table element$>$} \\
+\textrm{$<$table element$>$} &::=& \textrm{\textit{$<$column name$>$} $<$data type$>$} \\
+\textrm{$<$data type$>$} &::=& \textrm{INTEGER} \\
+&& \textrm{SMALLINT} \\
+&& \textrm{FLOAT} \\
+&& \textrm{NUMERIC} \\
+&& \textrm{BOOLEAN} 
+% \\ && \textrm{CHAR}
+\edm
+
+\section{Parser for the SQL Assertion}
+The grammar of SQL assertion is:
+\bdm
+\textrm{CREATE ASSERTION \textit{$<$assertion name$>$}}	\\
+\textrm{CHECK $<$exists predicate$>$}
+% \textrm{CHECK $<$search condition$>$}
+\edm
+\bdm
+\textrm{$<$exists predicate$>$} &::=& \textrm{[ NOT ] EXISTS ( $<$query expression$>$ )} \\
+
+\textrm{$<$query expression$>$} &::=& \textrm{SELECT *}	\\
+% && \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$ }	\\
+&& \textrm{FROM $<$table list$>$}	\\
+&& \textrm{WHERE $<$search condition$>$} \\
+
+\textrm{$<$table list$>$} &::=& \textrm{\textit{$<$table name$>$}} ~ \textrm{\textit{$<$tuple name$>$}} \\
+&& \textrm{$<$table list$>$} , \textrm{\textit{$<$table name$>$}} ~ \textrm{\textit{$<$tuple name$>$}} \\
+
+\textrm{$<$search condition$>$} &::=& \textrm{$<$boolean term$>$} \\
+&|& \textrm{$<$search condition$>$ OR $<$boolean term$>$} \\
+
+\textrm{$<$boolean term$>$} &::=& \textrm{$<$boolean factor$>$} \\
+&|& \textrm{$<$boolean term$>$ AND $<$boolean factor$>$} \\
+
+\textrm{$<$boolean factor$>$} &::=& \textrm{$<$predicate$>$} \\
+&|& \textrm{[ NOT ] ( $<$search condition$>$ )} \\
+
+\textrm{$<$predicate$>$} &::=& \textrm{$<$exists predicate$>$} \\
+&|& \textrm{$<$comparison predicate$>$} \\
+&|& \textrm{$<$between predicate$>$} \\
+&|& \textrm{$<$in predicate$>$} \\
+&|& \textrm{$<$null predicate$>$} \\
+
+% \textrm{$<$exists predicate$>$} &::=& \textrm{[ NOT ] EXISTS ( $<$query expression$>$ )} \\
+% 
+% \textrm{$<$query expression$>$} &::=& \textrm{SELECT *}	\\
+% % && \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$ }	\\
+% && \textrm{FROM $<$table list$>$}	\\
+% && \textrm{WHERE $<$search condition$>$} \\
+% 
+% \textrm{$<$table list$>$} &::=& \textrm{$<$table name$>$} ~ \textrm{$<$tuple name$>$} \\
+% && \textrm{$<$table list$>$} , \textrm{$<$table name$>$} ~ \textrm{$<$tuple name$>$} \\
+% 
+\textrm{$<$comparison predicate$>$} &::=& \textrm{$<$expression$_{1}>$} ~ \textrm{$<$comp op$>$} ~ \textrm{$<$expression$_{2}>$} \\
+\textrm{$<$comp op$>$} &::=&  =	
+~|~	<>
+~|~	<
+~|~	\leq
+~|~	>
+~|~	\geq \\
+
+\textrm{$<$expression$>$} &::=& \textrm{$<$term$>$} \\
+&|& \textrm{$<$expression$>$} ~ \left\{ + ~|~ - \right\} ~ \textrm{$<$term$>$} \\
+
+\textrm{$<$term$>$} &::=& \textrm{$<$factor$>$} \\
+&|&	 \textrm{$<$term$>$} ~ \left\{ * ~|~ / \right\} ~ \textrm{$<$factor$>$} \\
+  
+\textrm{$<$factor$>$} &::=& \left( \textrm{$<$expression$>$} \right) \\
+&|& \left[ + ~|~ - \right] \textrm{\textit{$<$const$>$}} \\
+&|& \left[ + ~|~ - \right] \textrm{$<$column$>$} \\
+
+\textrm{$<$column$>$} &::=& \textrm{\textit{$<$tuple name$>$}.\textit{$<$attribute name$>$}} \\
+
+\textrm{$<$between predicate$>$} &::=& \mbox{$<$expression$>$ [ NOT ]} \\
+&& \mbox{BETWEEN \textit{$<$const$_{1}>$} AND \textit{$<$const$_{2}>$}} \\
+
+\textrm{$<$in predicate$>$}	&::=& \textrm{$<$expression$>$} \textrm{[ NOT ] IN ( $<$in value list$>$ )} \\
+\textrm{$<$in value list$>$} &::=& \textrm{\textit{$<$const$>$}} \\
+&|& \textrm{$<$in value list$>$} , \textrm{\textit{$<$const$>$}} \\
+
+\textrm{$<$null predicate$>$} &::=& \textrm{$<$column$>$} \textrm{ IS [ NOT ] NULL} \\
+
+\edm
+
+The general form of the target Why3ML code is:
+\begin{center}
+predicate $<$assertion name$>$ $<$parameters$>$ = \\
+$<$logical formula$>$
+\end{center}
+
+We define the function $\mathcal{T}$ as the translational function mapping a SQL assertion phrase into a logical formula.
+\bdm
+
+\begin{array}{r}
+\mathcal{T} [ \textrm{CREATE ASSERTION $<$assertion name$>$} \\
+\textrm{CHECK $<$exists predicate$>$} ]
+\end{array}
+& \leadsto & \mathcal{T} [ \textrm{$<$exists predicate$>$} ]
+\\
+\begin{array}[t]{rl}
+  \mathcal{T} [ \textrm{EXISTS (} & \textrm{SELECT *} \\
+  & \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$}	\\
+  & \textrm{WHERE $<$search condition$>$ )} ]
+\end{array}
+&\leadsto&
+\begin{array}[t]{l}
+  \textrm{exists } x_{1}, \ldots , x_{n}. \\
+  x_{1} \in R_{1} \land \dots \land x_{n} \in R_{n} \\
+  \land \mathcal{T} [ \textrm{$<$search condition$>$} ]
+\end{array}
+\\
+\begin{array}[t]{rl}
+  \mathcal{T} [ \textrm{NOT EXISTS (} & \textrm{SELECT *} \\
+  & \textrm{FROM $R_{1}$ $x_{1}$,$\cdots$, $R_{n}$ $x_{n}$}	\\
+  & \textrm{WHERE $<$search condition$>$ )} ]
+\end{array}
+&\leadsto&
+\begin{array}[t]{l}
+  \textrm{not (exists } x_{1}, \ldots , x_{n}. \\
+  x_{1} \in R_{1} \land \dots \land x_{n} \in R_{n} \\
+  \land \mathcal{T} [ \textrm{$<$search condition$>$} ] )
+\end{array}
+\edm
+\bdm
+\mathcal{T} [ \textrm{$<$search condition$>$ OR }  \textrm{$<$boolean term$>$} ] &\leadsto& \mathcal{T} [ \textrm{$<$search condition$>$} ] \lor \mathcal{T} [ \textrm{$<$boolean term$>$} ] 
+\\
+\mathcal{T} [ \textrm{$<$boolean term$>$ AND }  \textrm{$<$boolean factor$>$} ] &\leadsto& \mathcal{T} [ \textrm{$<$boolean term$>$} ] \land \mathcal{T} [ \textrm{$<$boolean factor$>$} ] 
+\\
+\mathcal{T} [ \textrm{NOT ($<$predicate$>$)} ] &\leadsto&  \lnot ~ (\mathcal{T} [ \textrm{$<$predicate$>$} ] )
+\edm
+\bdm
+\mathcal{T} [ \textrm{$<$expression$_{1}>$} ~ \textrm{$<$comp op$>$} ~ \textrm{$<$expression$_{2}>$} ] 
+&\leadsto& 
+\begin{array}[t]{l}
+  \mathcal{T} [ \textrm{$<$expression$_{1}>$} ] \\  \mathcal{T} [ \textrm{$<$comp op$>$} ] ~ \mathcal{T} [ \textrm{$<$expression$_{2}>$} ]
+\end{array}
+\\
+\textrm{$<$comp op$>$} &::=&  =	
+~|~	<>
+~|~	<
+~|~	\leq
+~|~	>
+~|~	\geq 
+\\
+\mathcal{T} [ \textrm{$<$comp op$>$} ] &\leadsto& \textrm{$<$comp op$>$}
+\\
+\mathcal{T} [ \textrm{$<$expression$_{1}>$} ~ \textrm{$<$numerical op$>$} ~ \textrm{$<$expression$_{2}>$} ] 
+&\leadsto& % \\ &&
+\begin{array}[t]{l}
+  \mathcal{T} [ \textrm{$<$expression$_{1}>$} ] \\  \mathcal{T} [ \textrm{$<$numerical op$>$} ] ~ \mathcal{T} [ \textrm{$<$expression$_{2}>$} ]
+\end{array}
+\\
+\textrm{$<$numerical op$>$} &::=& + ~|~ - ~|~ \times ~|~ /
+\\
+\mathcal{T} [ \textrm{$<$numerical op$>$} ] &\leadsto& \textrm{$<$numerical op$>$}
+\\
+\mathcal{T} [ \textrm{$<$const$>$} ] &\leadsto& \textrm{$<$const$>$}
+\\
+\mathcal{T} [ x.a ] &\leadsto& x.a 
+\edm
+\bdm
+\begin{array}[t]{l}
+\mathcal{T} [ \mbox{$<$expression$>$ BETWEEN} \\ \mbox{$<$const$_{1}>$ AND $<$const$_{2}>$} ]
+\end{array}
+&\leadsto& 
+\begin{array}[t]{l}
+% (
+  \left( \mathcal{T} [ \textrm{$<$expression$>$} ] ~\geq~ \textrm{$<$const$_{1}>$} \right)	
+  \\	\land 
+  \left( \mathcal{T} [ \textrm{$<$expression$>$} ] ~\leq~ \textrm{$<$const$_{2}>$} \right)
+%  )
+\end{array}
+\\
+\begin{array}[t]{l}
+\mathcal{T} [ \mbox{$<$expression$>$ NOT BETWEEN} \\ \mbox{$<$const$_{1}>$ AND $<$const$_{2}>$} ] 
+\end{array}
+&\leadsto& 
+\begin{array}[t]{l}
+  \left( \mathcal{T} [ \textrm{$<$expression$>$} ] ~<~ \textrm{$<$const$_{1}>$} \right)	
+  \\ \land 
+  \left( \mathcal{T} [ \textrm{$<$expression$>$} ] ~>~ \textrm{$<$const$_{2}>$} \right)
+\end{array}
+\edm
+\bdm
+\begin{array}[t]{l}
+  \mathcal{T} [ \textrm{$<$expression$>$ IN}	\\	\textrm{ ( $<$const$_{1}>$, \ldots, $<$const$_{m}>$ ) } ]
+\end{array}
+&\leadsto&  
+\begin{array}[t]{l}
+  \textrm{mem } \mathcal{T}	[ \textrm{$<$expression$>$} ] \\
+  \textrm{(Cons $<$const$_{1}>$ (Cons \ldots (Cons $<$const$_{m}>$ Nil) \ldots ))}
+\end{array}
+\\
+\begin{array}[t]{l}
+  \mathcal{T} [ \textrm{$<$expression$>$ NOT IN}	\\	\textrm{ ( $<$const$_{1}>$, \ldots, $<$const$_{m}>$ ) } ]
+\end{array}
+&\leadsto&  
+\begin{array}[t]{l}
+  \textrm{not (mem } \mathcal{T}	[ \textrm{$<$expression$>$} ] \\
+  \textrm{(Cons $<$const$_{1}>$ (Cons \ldots (Cons $<$const$_{m}>$ Nil) \ldots )))}
+\end{array}
+\edm
+\bdm
+\begin{array}{l}
+\mathcal{T} [ x.a \textrm{ IS NULL} ]
+\end{array}
+&\leadsto&  x.a = \textrm{NULL} 
+\\
+\begin{array}{l}
+\mathcal{T} [ x.a \textrm{ IS NOT NULL} ]
+\end{array}
+&\leadsto&  x.a \neq \textrm{NULL} 
+\\
+\mbox{Let $exp$ be a source language phrase, then:}
+\\
+\mathcal{T} [ ( exp ) ] &\leadsto& ( \mathcal{T} [ exp ] )
+
+\edm
+
+\section{Parser for the SQL INSERT statement}
+The grammar of SQL insert statement is:
+\bdm
+\textrm{$<$insert statement$>$} &::=& \textrm{INSERT INTO \textit{$<$table name$>$} VALUES ( $<$column value list$>$ )} \\
+&|& \textrm{INSERT INTO \textit{$<$table name$>$} ( $<$column name list$>$ )} \\
+&& \textrm{VALUES ( $<$column value list$>$ )} \\
+\textrm{$<$column name list$>$} &::=& \textrm{\textit{$<$column name$>$}} \\
+&|& \textrm{$<$column name list$>$} , \textrm{\textit{$<$column name$>$}} \\
+\textrm{$<$column value list$>$} &::=& \textrm{$<$column value$>$} \\
+&|& \textrm{$<$column value list$>$} , \textrm{\textit{$<$column value$>$}} \\
+
+\edm
+The general form of the target Why3ML code is:
+\bdm
+\textrm{$<$insert function$>$} &::=&
+\textrm{let \textit{$<$fun name$>$} \textit{$<$fun parameters$>$}} = \\
+&& \textrm{\{ $<$precondition$>$ \}} \\
+&& \textrm{\textit{$<$target table$>$} ++ $<$new tuple$>$} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+\textrm{$<$precondition$>$} &::=&
+\textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+&|& \textrm{$<$precondition$>$} \land \textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+\textrm{$<$new tuple$>$} &::=& \textrm{( Cons \{$|<$new column list$>|$\} Nil )} \\
+\textrm{$<$new column list$>$} &::=& 
+\textrm{\textit{$<$column name$>$} = \textit{$<$column value$>$}} \\
+&|& \textrm{$<$new column list$>$; \textit{$<$column name$>$} = \textit{$<$column value$>$}} 
+\edm
+The grammar of $<$postcondition$>$ is the same as that of $<$precondition$>$ except that all occurrences of $<$target table$>$ in the $<$assertion arguments$>$ are replaced by ``result''.
+
+\section{Parser for the SQL DELETE statement}
+The grammar of SQL delete statement is:
+\bdm
+\textrm{$<$delete statement$>$} &::=& \textrm{DELETE FROM \textit{$<$target table name$>$}} \\
+&& \textrm{[ USING $<$table reference list$>$ ]} \\
+&& \textrm{[ WHERE $<$search condition$>$ ]} \\
+\textrm{$<$table reference list$>$} &::=& \textrm{\textit{$<$table name$>$}} \\
+&|& \textrm{$<$table reference list$>$} , \textrm{\textit{$<$table name$>$}} \\
+
+\textrm{$<$search condition$>$} &::=& \textrm{$<$boolean term$>$} \\
+&|& \textrm{$<$search condition$>$ OR $<$boolean term$>$} \\
+
+\textrm{$<$boolean term$>$} &::=& \textrm{$<$boolean factor$>$} \\
+&|& \textrm{$<$boolean term$>$ AND $<$boolean factor$>$} \\
+
+\textrm{$<$boolean factor$>$} &::=& \textrm{$<$predicate$>$} \\
+&|& \textrm{[ NOT ] ( $<$search condition$>$ )} \\
+
+\textrm{$<$predicate$>$} &::=& \textrm{$<$comparison predicate$>$} \\
+&|& \textrm{$<$between predicate$>$} \\
+&|& \textrm{$<$in predicate$>$} \\
+&|& \textrm{$<$null predicate$>$} \\
+\edm
+The left parts are the same as those in the SQL assertion, so they are omitted in this manual. 
+
+If $<$search condition$>$ is not specified in the delete statement, then the general form of the target Why3ML code is:
+\bdm
+\textrm{$<$delete function$>$} &::=&
+\textrm{let rec \textit{$<$fun name$>$} $<$fun parameters$>$} = \\
+&& \textrm{\{ true \}} \\
+&& \textrm{match \textit{$<$target table$>$} with} \\
+&& \textrm{$|$ Nil $\rightarrow$ Nil} \\
+&& \textrm{$|$ Cons \{$|$ $<$tuple exp$>$ $|$\} \textit{$<$left table$>$}} \rightarrow \\
+&& \textrm{( \textit{$<$fun name$>$} \textit{$<$fun arguments$>$} )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+\textrm{$<$tuple exp$>$} &::=&
+\textrm{\textit{$<$column name$>$} = $<$column value string$>$} \\
+&|& \textrm{$<$tuple exp$>$; \textit{$<$column name$>$} = $<$column value string$>$} \\ 
+\textrm{$<$column value string$>$} &::=& \textrm{\textit{$<$table name$>$}\_\textit{$<$column name$>$}\_value} \\
+\textrm{$<$postcondition$>$} &::=& \textrm{$<$condition$>$} \rightarrow \textrm{$<$consequence$>$} \\
+\textrm{$<$condition$>$} &::=& 
+\textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+&|& \textrm{$<$condition$>$} \land \textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+\edm
+The grammar of $<$fun arguments$>$ is the same as that of $<$fun parameters$>$ except that all occurrences of $<$target table$>$ are replaced by $<$left table$>$.
+The grammar of $<$consequence$>$ is the same as that of $<$condition$>$ except that all occurrences of $<$target table$>$ in the $<$assertion arguments$>$ are replaced by ``result''.
+
+If $<$search condition$>$ is specified and there is only one table in the delete statement, then the general form of the target Why3ML code is:
+\bdm
+\textrm{$<$delete function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ true \}} \\
+&& \textrm{match $<$target table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ Nil} \\
+&& \textrm{$|$ Cons \{$|$ $<$tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$search condition$>$ then ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{else Cons \{$|$ $<$tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+
+\edm
+
+If $<$search condition$>$ is specified and more than one tables are involved in the delete statement, then we generate a predicate, a set of iteration functions and a delete function.
+
+The predicate is used to represent the $<$search condition$>$, which will be used in the postcondition part of the iteration functions and the delete function. The general form of the predicate is:
+\bdm
+\textrm{$<$sc predicate$>$} &::=&
+\textrm{predicate $<$predicate name$>$ $<$predicate parameters$>$ =} \\
+&& \textrm{$<$search condition$>$}
+\edm
+The iteration functions are used to obtain the required column values from tables other from the target table. The general form of the iteration function is:
+\bdm
+\textrm{$<$iter function$>$} &::=&
+\textrm{let rec \textit{$<$fun name$>$} $<$fun parameters$>$} = \\
+&& \textrm{\{ $<$precondition$>$ \}} \\
+&& \textrm{match $<$iter table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ False} \\
+&& \textrm{$|$ Cons \{$|$ $<$tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$check condition$>$ then True} \\
+&& \textrm{else ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+\textrm{$<$precondition$>$} &::=&
+\textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+&|& \textrm{$<$precondition$>$} \land \textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+\edm
+Let $ITL$ be the list of tables that have been already iterated, then $\forall arg \in \textrm{$<$assertion arguments$>$}, arg \in ITL$.
+\bdm
+\textrm{$<$postcondition$>$} &::=&
+\textrm{$<$precondition$>$} \land \textrm{( result = True $\rightarrow$ $<$exists statement$>$ )} \\
+\textrm{$<$exists statement$>$} &::=&
+\textrm{exists $<$tuple$>$: $<$tuple type$>$.} \\
+&& \textrm{mem $<$tuple$>$ $<$iter table$>$ $\land$ ( $<$sc predicate$>$ $<$predicate arguments$>$ )}
+\edm
+
+The delete function is the function that will delete tuples from the target table. The general form of the delete function is:
+\bdm
+\textrm{$<$delete function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ $<$precondition$>$ \}} \\
+&& \textrm{match $<$target table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ False} \\
+&& \textrm{$|$ Cons \{$|$ $<$tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$check condition$>$ then ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{else Cons \{$|$ $<$tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+
+
+\edm
+
+
+\section{Parser for the SQL UPDATE statement}
+The grammar of SQL update statement is:
+\bdm
+\textrm{$<$update statement$>$} &::=& \textrm{UPDATE \textit{$<$target table name$>$}} \\
+&& \textrm{SET $<$set clause list$>$} \\
+&& \textrm{[ FROM $<$table reference list$>$ ]} \\
+&& \textrm{[ WHERE $<$search condition$>$ ]} \\
+\textrm{$<$set clause list$>$} &::=& \textrm{$<$set clause$>$} \\
+&& \textrm{$<$set clause list$>$} , \textrm{$<$set clause$>$} \\
+\textrm{$<$set clause$>$} &::=& \textrm{$<$set column$>$} = \textrm{\textit{$<$const$>$}} \\
+\textrm{$<$set column$>$} &::=& \textrm{\textit{$<$table name$>$}.\textit{$<$attribute name$>$}} \\
+\edm
+The left parts are the same as those in the SQL delete statement grammar, so they are omitted in this manual. 
+
+If $<$search condition$>$ is not specified in the update statement, then the general form of the target Why3ML code is:
+\bdm
+\textrm{$<$update function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ true \}} \\
+&& \textrm{match $<$target table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ Nil} \\
+&& \textrm{$|$ Cons \{$|$ $<$old tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{Cons \{$|$ $<$new tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+\textrm{$<$tuple exp$>$} &::=&
+\textrm{$<$column name$>$ = $<$column value string$>$} \\
+&|& \textrm{$<$tuple exp$>$; $<$column name$>$ = $<$column value string$>$} \\ 
+\textrm{$<$column value string$>$} &::=& \textrm{$<$table$>_<$column$>_<$value$>$} \\
+\textrm{$<$postcondition$>$} &::=& \textrm{$<$condition$>$} \rightarrow \textrm{$<$consequence$>$} \\
+\textrm{$<$condition$>$} &::=& 
+\textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+&|& \textrm{$<$condition$>$} \land \textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+\edm
+The grammar of $<$fun arguments$>$ is the same as that of $<$fun parameters$>$ except that all occurrences of $<$target table$>$ are replaced by $<$left table$>$.
+The grammar of $<$consequence$>$ is the same as that of $<$condition$>$ except that all occurrences of $<$target table$>$ in the $<$assertion arguments$>$ are replaced by ``result''.
+
+If $<$search condition$>$ is specified and there is only one table in the update statement, then the general form of the target Why3ML code is:
+\bdm
+\textrm{$<$update function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ true \}} \\
+&& \textrm{match $<$target table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ Nil} \\
+&& \textrm{$|$ Cons \{$|$ $<$old tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$search condition$>$} \\
+&& \textrm{then Cons \{$|$ $<$new tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{else Cons \{$|$ $<$old tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+
+\edm
+
+If $<$search condition$>$ is specified and more than one tables are involved in the update statement, then we generate a predicate, a set of iteration functions and a update function.
+
+The predicate is used to represent the $<$search condition$>$, which will be used in the postcondition part of the iteration functions and the update function. The general form of the predicate is:
+\bdm
+\textrm{$<$sc predicate$>$} &::=&
+\textrm{predicate $<$predicate name$>$ $<$predicate parameters$>$ =} \\
+&& \textrm{$<$search condition$>$}
+\edm
+The iteration functions are used to obtain the required column values from tables other from the target table. The general form of the iteration function is:
+\bdm
+\textrm{$<$iter function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ $<$precondition$>$ \}} \\
+&& \textrm{match $<$iter table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ False} \\
+&& \textrm{$|$ Cons \{$|$ $<$tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$check condition$>$ then True} \\
+&& \textrm{else ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+\textrm{$<$precondition$>$} &::=&
+\textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+&|& \textrm{$<$precondition$>$} \land \textrm{\textit{$<$assertion name$>$} \textit{$<$assertion arguments$>$}} \\
+\edm
+Let $ITL$ be the list of tables that have been already iterated, then $\forall arg \in \textrm{$<$assertion arguments$>$}, arg \in ITL$.
+\bdm
+\textrm{$<$postcondition$>$} &::=&
+\textrm{$<$precondition$>$} \land \textrm{( result = True $\rightarrow$ $<$exists statement$>$ )} \\
+\textrm{$<$exists statement$>$} &::=&
+\textrm{exists $<$tuple$>$: $<$tuple type$>$.} \\
+&& \textrm{mem $<$tuple$>$ $<$iter table$>$ $\land$ ( $<$sc predicate$>$ $<$predicate arguments$>$ )}
+\edm
+
+The update function is the function that will update tuples from the target table. The general form of the update function is:
+\bdm
+\textrm{$<$update function$>$} &::=&
+\textrm{let rec $<$fun name$>$ $<$fun parameters$>$} = \\
+&& \textrm{\{ $<$precondition$>$ \}} \\
+&& \textrm{match $<$target table$>$ with} \\
+&& \textrm{$|$ Nil $\rightarrow$ False} \\
+&& \textrm{$|$ Cons \{$|$ $<$old tuple exp$>$ $|$\} $<$left table$>$} \rightarrow \\
+&& \textrm{if $<$check condition$>$} \\
+&& \textrm{then Cons \{$|$ $<$new tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{else Cons \{$|$ $<$new tuple exp$>$ $|$\} ( $<$fun name$>$ $<$fun arguments$>$ )} \\
+&& \textrm{end} \\
+&& \textrm{\{ $<$postcondition$>$ \}} \\
+
+
+\edm
+
+
+\end{document}
+
+
