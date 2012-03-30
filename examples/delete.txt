@@ -1,4 +1,0 @@
-
-DELETE FROM r1
-USING r, r1
-WHERE ( r.a1 = r1.b1 );

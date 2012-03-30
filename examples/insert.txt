@@ -1,3 +1,0 @@
-INSERT INTO	r
-VALUES (1,1);
-
