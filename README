@@ -1,0 +1,13 @@
+== Introduction
+This is a project of **automated constraint verification for databases**.
+
+Our method is based on the weakest precondition and predicate transformer approaches.
+First we reduce database integrity constraints in SQL into SQL assertions, and then transfer assertions into FOL (first-order logic) formula.
+Based on the logical formalization of both SQL assertions and data modification operations, we implement integrity constraints checking for databases
+
+With the help of the program verification platform Why3. For the input SQL statements, our program translate them into WhyML program, later Why3 is called to compute the weakest preconditions and generate the verification conditions for the back-end provers (such as Alt-Ergo, CVC, \textit{etc.}). Finally the provers will check whether the databases after executing the data modification operations satisfy the constraints.
+All the process is fully automatic.
+
+== What is Why3?
+Why3 is a software verification platform. Why3 clearly separates the purely logical specification part from generation of verification conditions for programs. It features a rich library of proof task transformations that can be chained to produce a suitable input for a large set of theorem provers, including SMT solvers, TPTP provers, as well as interactive proof assistants.
+http://why3.lri.fr/
