@@ -5,7 +5,7 @@ Our method is based on the weakest precondition and predicate transformer approa
 First we reduce database integrity constraints in SQL into SQL assertions, and then transfer assertions into FOL (first-order logic) formula.
 Based on the logical formalization of both SQL assertions and data modification operations, we implement integrity constraints checking for databases
 
-With the help of the program verification platform Why3. For the input SQL statements, our program translate them into WhyML program, later Why3 is called to compute the weakest preconditions and generate the verification conditions for the back-end provers (such as Alt-Ergo, CVC, \textit{etc.}). Finally the provers will check whether the databases after executing the data modification operations satisfy the constraints.
+With the help of the program verification platform Why3. For the input SQL statements, our program translate them into WhyML program, later Why3 is called to compute the weakest preconditions and generate the verification conditions for the back-end provers (such as Alt-Ergo, CVC, etc.). Finally the provers will check whether the databases after executing the data modification operations satisfy the constraints.
 All the process is fully automatic.
 
 == What is Why3?
